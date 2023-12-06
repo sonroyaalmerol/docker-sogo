@@ -10,27 +10,14 @@ source /usr/local/bin/bgowait
 ##############################################################################
 # write config vars with configfile template
 ##############################################################################
-function checkDatabase(){
-    mysql -u $DB_USER --password=$DB_PASS -h $DB_HOST -e "show tables" --database $DB_DATABASE
-}
-function writeConfigOptions(){
+function init(){
+    # write file based config options
     echo "write config options"
     
     cat /etc/sogo/sogo.conf
 
     cat /opt/docker-config/nginx.conf.tmpl \
         > /etc/nginx/sites-enabled/default   
-}
-function init(){
-    ## pre-config initialization
-    retry 10 5 "cannot connect to database." checkDatabase
-    if [[ $? != 0 ]]; then
-        echo "cannot initialize db: waitForDatabase" >&2
-        return 1
-    fi
-
-    # write file based config options
-    writeConfigOptions
 }
 
 ##############################################################################
