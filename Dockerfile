@@ -10,7 +10,8 @@ RUN apt-get update && \
     apt-get install apt-transport-https -y && \
     echo "deb http://packages.sogo.nu/nightly/5/debian/ bookworm bookworm" >> /etc/apt/sources.list && \
     apt-get update && \
-    apt-get install sogo sope4.9-gdl1-postgresql sope4.9-gdl1-mysql default-mysql-client nginx -y
+    apt-get install sogo sope4.9-gdl1-postgresql sope4.9-gdl1-mysql default-mysql-client nginx -y && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY ./bashutil/* /usr/local/bin
 
@@ -18,6 +19,11 @@ COPY ./bashutil/* /usr/local/bin
 ADD config /opt/docker-config
 ADD init /opt/docker-init
 
+RUN chmod +x /opt/docker-init/entrypoint && \
+    chmod +x /usr/local/bin/bgo && \
+    chmod +x /usr/local/bin/bgowait && \
+    chmod +x /usr/local/bin/retry
+
 # start from init folder
 WORKDIR /opt/docker-init
-ENTRYPOINT ["./entrypoint"]
+ENTRYPOINT ["/opt/docker-init/entrypoint"]
