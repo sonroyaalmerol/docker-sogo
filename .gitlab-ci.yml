@@ -1,0 +1,40 @@
+# Gitlab CI definitions
+
+
+build-postal:
+  stage: build
+  tags:
+    - sglit-runner
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(echo -n ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD} | base64)\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination ${CI_REGISTRY_IMAGE}/postal:$CI_COMMIT_SHORT_SHA --destination ${CI_REGISTRY_IMAGE}/postal:${CI_COMMIT_REF_SLUG}-latest
+
+.deploy-postal:
+    stage: deploy
+    image: docker:latest
+    variables:
+        DEPLOY_HOST: "192.168.100.87"
+        DOCKER_HOST: "ssh://gitlabdev@$DEPLOY_HOST"
+        COMPOSE_CONTAINER: "sogo"
+        COMPOSE_PROJECT: "sogo"
+        COMPOSE_LOCATION: "/srv/stacks/sogo/docker-compose.yml"
+        GIT_STRATEGY: none
+        GIT_CHECKOUT: "false" 
+    tags:
+        - docker
+        - sgl-lan
+    before_script:
+        - eval $(ssh-agent -s)
+        - chmod 0600 ${SSH_PRIVATE_KEY}
+        - ssh-add ${SSH_PRIVATE_KEY}
+        - ssh-keyscan "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+        - chmod 644 ~/.ssh/known_hosts
+        - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    script:
+        - docker compose -f ${COMPOSE_LOCATION} -p ${COMPOSE_PROJECT} pull ${COMPOSE_CONTAINER}
+        - docker compose -f ${COMPOSE_LOCATION} -p ${COMPOSE_PROJECT} up -d ${COMPOSE_CONTAINER} --force-recreate
+
