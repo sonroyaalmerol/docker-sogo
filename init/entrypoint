@@ -38,7 +38,7 @@ function init(){
     
     mkdir -p /var/log/sogo
     touch /var/log/sogo/sogo.log
-    chown -R abc:abc /var/log/sogo
+    chown -R sogo:sogo /var/log/sogo
 }
 
 ##############################################################################
