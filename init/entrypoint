@@ -17,16 +17,16 @@ function init(){
     PUID=${PUID:-911}
     PGID=${PGID:-911}
 
-    groupmod -o -g "$PGID" abc
-    usermod -o -u "$PUID" abc
+    groupmod -o -g "$PGID" sogo
+    usermod -o -u "$PUID" sogo
 
     echo '
     ───────────────────────────────────────
     GID/UID
     ───────────────────────────────────────'
     echo "
-    User UID:    $(id -u abc)
-    User GID:    $(id -g abc)
+    User UID:    $(id -u sogo)
+    User GID:    $(id -g sogo)
     ───────────────────────────────────────
     "
     
@@ -43,7 +43,7 @@ function init(){
 ##############################################################################
 function service_sogo(){
     NAME=sogo
-    USER=abc
+    USER=$NAME
 
     PREFORK=3
     PIDFILE=/var/run/$NAME/$NAME.pid

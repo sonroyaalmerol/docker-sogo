@@ -1,6 +1,6 @@
 FROM ghcr.io/linuxserver/baseimage-debian:bookworm
 
-RUN mkdir /etc/sogo && chown -R abc: /etc/sogo
+RUN mkdir /etc/sogo && chown -R sogo: /etc/sogo
 
 # install operating system packages
 RUN apt-get update -y && apt-get install wget make git gettext gnupg2 -y
@@ -22,8 +22,7 @@ ADD init /opt/docker-init
 RUN chmod +x /opt/docker-init/entrypoint && \
     chmod +x /usr/local/bin/bgo && \
     chmod +x /usr/local/bin/bgowait && \
-    chmod +x /usr/local/bin/retry && \
-    sed -i "s/user www-data;/user abc;/" /etc/nginx/nginx.conf
+    chmod +x /usr/local/bin/retry
 
 # start from init folder
 WORKDIR /opt/docker-init
