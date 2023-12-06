@@ -30,6 +30,7 @@ function init(){
     ───────────────────────────────────────
     "
     
+    mkdir /etc/sogo && chown -R sogo: /etc/sogo
     cat /etc/sogo/sogo.conf
 
     cat /opt/docker-config/nginx.conf.tmpl \

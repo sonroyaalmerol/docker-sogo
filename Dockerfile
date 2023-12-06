@@ -1,7 +1,5 @@
 FROM ghcr.io/linuxserver/baseimage-debian:bookworm
 
-RUN mkdir /etc/sogo && chown -R sogo: /etc/sogo
-
 # install operating system packages
 RUN apt-get update -y && apt-get install wget make git gettext gnupg2 -y
 RUN wget -O- "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xCB2D3A2AA0030E2C" | gpg --dearmor | apt-key add -
