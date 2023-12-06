@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# include bpkg dependencies
+source /usr/local/bin/retry
+source /usr/local/bin/bgo
+source /usr/local/bin/bgowait
+
+# global variables
+
+##############################################################################
+# write config vars with configfile template
+##############################################################################
+function checkDatabase(){
+    mysql -u $DB_USER --password=$DB_PASS -h $DB_HOST -e "show tables" --database $DB_DATABASE
+}
+function writeConfigOptions(){
+    echo "write config options"
+    
+    cat /etc/sogo/sogo.conf
+
+    cat /opt/docker-config/nginx.conf.tmpl \
+        > /etc/nginx/sites-enabled/default   
+}
+function init(){
+    ## pre-config initialization
+    retry 10 5 "cannot connect to database." checkDatabase
+    if [[ $? != 0 ]]; then
+        echo "cannot initialize db: waitForDatabase" >&2
+        return 1
+    fi
+
+    # write file based config options
+    writeConfigOptions
+}
+
+##############################################################################
+function service_sogo(){
+    NAME=sogo
+    USER=abc
+
+    PREFORK=3
+    PIDFILE=/var/run/$NAME/$NAME.pid
+    LOGFILE=/var/log/$NAME/$NAME.log
+
+    DAEMON=/usr/sbin/sogod
+    DAEMON_OPTS="-WONoDetach YES -WOWorkersCount $PREFORK -WOPidFile $PIDFILE -WOLogFile $LOGFILE"
+
+    install -o $USER -g $USER -m 755 -d /var/run/$NAME
+    install -o $USER -g $USER -m 750 -d /var/spool/$NAME
+    install -o $USER -g $USER -m 750 -d /var/log/$NAME
+
+    su -s /bin/bash -c "$DAEMON $DAEMON_OPTS" $USER
+}
+function service_nginx(){
+    nginx -g 'daemon off;'
+}
+function service_logs(){
+    tail -f /var/log/sogo/sogo.log /var/log/nginx/*
+}
+function start(){
+    echo "starting applications..."
+    bgo service_sogo service_nginx service_logs
+    if [[ $? != 0 ]]; then
+        echo "start failed. exiting now." >&2
+        exit 1
+    fi
+}
+
+##############################################################################
+function main(){
+    # initialize
+    init
+    if [[ $? != 0 ]]; then 
+        echo "init failed. exiting now." >&2
+        exit 1
+    fi
+
+    # start
+    start 
+    if [[ $? != 0 ]]; then
+        echo "start failed. exiting now." >&2
+        exit 1
+    fi    
+
+    # wait
+    echo "done. now waiting for services."
+    #freq=5; waitForN=-1; killTasks=0 # fail one, ignore (development mode)
+    freq=5; waitForN=1; killTasks=1 #fail one, fail all (production mode)
+    bgowait $freq $waitForN $killTasks
+}
+
+if [[ "$1" == "" ]]; then
+    main
+else
+    exec "$@"
+fi
