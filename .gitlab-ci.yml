@@ -4,7 +4,7 @@
 build-postal:
   stage: build
   tags:
-    - sglit-runner
+    - kaniko
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
