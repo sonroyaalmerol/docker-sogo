@@ -26,7 +26,7 @@ function init(){
 ##############################################################################
 function service_sogo(){
     NAME=sogo
-    USER=abc
+    USER=$NAME
 
     PREFORK=3
     PIDFILE=/var/run/$NAME/$NAME.pid
