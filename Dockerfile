@@ -22,7 +22,8 @@ ADD init /opt/docker-init
 RUN chmod +x /opt/docker-init/entrypoint && \
     chmod +x /usr/local/bin/bgo && \
     chmod +x /usr/local/bin/bgowait && \
-    chmod +x /usr/local/bin/retry
+    chmod +x /usr/local/bin/retry && \
+    sed -i "s/user www-data;/user abc;/" /etc/nginx/nginx.conf
 
 # start from init folder
 WORKDIR /opt/docker-init
