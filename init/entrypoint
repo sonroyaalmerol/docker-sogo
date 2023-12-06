@@ -18,6 +18,9 @@ function init(){
 
     cat /opt/docker-config/nginx.conf.tmpl \
         > /etc/nginx/sites-enabled/default   
+    
+    mkdir -p /var/log/sogo
+    touch /var/log/sogo/sogo.log
 }
 
 ##############################################################################
