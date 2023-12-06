@@ -21,12 +21,13 @@ function init(){
     
     mkdir -p /var/log/sogo
     touch /var/log/sogo/sogo.log
+    chown -R abc:abc /var/log/sogo
 }
 
 ##############################################################################
 function service_sogo(){
     NAME=sogo
-    USER=$NAME
+    USER=abc
 
     PREFORK=3
     PIDFILE=/var/run/$NAME/$NAME.pid
