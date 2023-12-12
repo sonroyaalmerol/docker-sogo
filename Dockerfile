@@ -12,6 +12,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 COPY ./bashutil/* /usr/local/bin
+COPY ./default-sogo.conf /etc/default/sogo
 
 # add config and init files
 ADD config /opt/docker-config

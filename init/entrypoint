@@ -46,7 +46,7 @@ function service_sogo(){
     NAME=sogo
     USER=$NAME
 
-    PREFORK=3
+    PREFORK=30
     PIDFILE=/var/run/$NAME/$NAME.pid
     LOGFILE=/var/log/$NAME/$NAME.log
 
