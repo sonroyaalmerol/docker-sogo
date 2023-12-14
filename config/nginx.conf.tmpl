@@ -25,6 +25,19 @@ server
       rewrite ^(.*)$ /SOGo/dav; 
       allow all; 
    }
+
+   location = /.well-known/caldav
+   {
+      rewrite ^(.*)$ /SOGo/dav;
+      allow all;
+   }
+
+   location = /.well-known/carddav
+   {
+      rewrite ^(.*)$ /SOGo/dav;
+      allow all;
+   }
+
    location ^~/SOGo
    {
       proxy_pass http://127.0.0.1:20000; 
@@ -90,8 +103,4 @@ server
       proxy_pass http://127.0.0.1:20000/SOGo/Microsoft-Server-ActiveSync;
       proxy_redirect http://127.0.0.1:20000/SOGo/Microsoft-Server-ActiveSync /;
    }
-   location ~ ^/\.well-known/(caldav|carddav) {
-      rewrite ^/.well-known/(caldav|carddav)/?$ /SOGo/dav permanent;
-   }
-
 }
