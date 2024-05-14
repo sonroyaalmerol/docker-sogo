@@ -76,8 +76,7 @@ RUN apk update && \
 # add config, binaries, libraries, and init files
 
 COPY --from=builder /usr/local/sbin/* /usr/sbin/
-COPY --from=builder /usr/local/lib/sogo/* /usr/lib/sogo/
-COPY --from=builder /usr/local/lib/GNUstep/* /usr/lib/GNUstep/
+COPY --from=builder /usr/local/lib/* /usr/lib/
 COPY --from=builder /tmp/SOGo/Scripts/sogo-default /etc/default/sogo
 COPY --from=builder /tmp/SOGo/Scripts/sogo.cron /etc/cron.d/sogo
 COPY --from=builder /tmp/SOGo/Scripts/sogo.conf /etc/sogo/sogo.conf
