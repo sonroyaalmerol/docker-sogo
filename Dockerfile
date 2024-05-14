@@ -66,7 +66,7 @@ RUN apt-get update -y && \
         postgresql-client \
         nginx \
         supervisor && \
-    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /var/lib/apt/lists/*
 
 # add config, binaries, libraries, and init files
 
