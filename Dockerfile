@@ -123,7 +123,11 @@ COPY entrypoint.sh /opt/entrypoint.sh
 
 ADD https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${ARCH} /usr/bin/yq
 
-RUN chmod +x /opt/entrypoint.sh
+RUN cp -ra /usr/local/lib/GNUstep/. /usr/lib/GNUstep && \
+    cp -ra /usr/local/include/GNUstep/. /usr/include/GNUstep && \
+    rm -rf /usr/local/lib/GNUstep && \
+    rm -rf /usr/local/include/GNUstep && \
+    chmod +x /opt/entrypoint.sh
 
 # start from config folder
 WORKDIR /etc/sogo
