@@ -1,0 +1,102 @@
+# Database configuration (mysql://, postgresql:// or oracle://)
+SOGoProfileURL: "postgresql://sogo:sogo@localhost:5432/sogo/sogo_user_profile"
+OCSFolderInfoURL: "postgresql://sogo:sogo@localhost:5432/sogo/sogo_folder_info"
+OCSSessionsFolderURL: "postgresql://sogo:sogo@localhost:5432/sogo/sogo_sessions_folder"
+
+# Mail
+SOGoDraftsFolderName: Drafts
+SOGoSentFolderName: Sent
+SOGoTrashFolderName: Trash
+SOGoJunkFolderName: Junk
+SOGoIMAPServer: "localhost"
+SOGoSieveServer: "sieve://127.0.0.1:4190"
+SOGoSMTPServer: "smtp://127.0.0.1"
+SOGoMailDomain: "acme.com"
+SOGoMailingMechanism: smtp
+SOGoForceExternalLoginWithEmail: false
+SOGoMailSpoolPath: "/var/spool/sogo"
+NGImap4AuthMechanism: plain
+NGImap4ConnectionStringSeparator: "/"
+
+# Notifications
+SOGoAppointmentSendEMailNotifications: false
+SOGoACLsSendEMailNotifications: false
+SOGoFoldersSendEMailNotifications: false
+
+# Authentication
+SOGoPasswordChangeEnabled: true
+
+# LDAP authentication example
+SOGoUserSources:
+  - type: ldap
+    CNFieldName: cn
+    UIDFieldName: uid
+    IDFieldName: uid
+    bindFields: [uid, mail]
+    baseDN: "ou=users,dc=acme,dc=com"
+    bindDN: "uid=sogo,ou=users,dc=acme,dc=com"
+    bindPassword: qwerty
+    canAuthenticate: true
+    displayName: "Shared Addresses"
+    hostname: "ldap://127.0.0.1:389"
+    id: public
+    isAddressBook: true
+  # LDAP AD/Samba4 example
+  - type: ldap
+    CNFieldName: cn
+    UIDFieldName: sAMAccountName
+    baseDN: "CN=users,dc=domain,dc=tld"
+    bindDN: "CN=sogo,CN=users,DC=domain,DC=tld"
+    bindFields: [sAMAccountName, mail]
+    bindPassword: password
+    canAuthenticate: true
+    displayName: "Public"
+    hostname: "ldap://127.0.0.1:389"
+    filter: "mail = '*'"
+    id: directory
+    isAddressBook: true
+  # SQL authentication example
+  # These database columns MUST be present in the view/table:
+  #   c_uid - will be used for authentication -  it's the username or username@domain.tld)
+  #   c_name - which can be identical to c_uid -  will be used to uniquely identify entries
+  #   c_password - password of the user, plain-text, md5 or sha encoded for now
+  #   c_cn - the user's common name - such as "John Doe"
+  #   mail - the user's mail address
+  # See the installation guide for more details
+  - type: sql
+    id: directory
+    viewURL: "postgresql://sogo:sogo@127.0.0.1:5432/sogo/sogo_view"
+    canAuthenticate: true
+    isAddressBook: true
+    userPasswordAlgorithm: md5
+
+# Web Interface
+SOGoPageTitle: SOGo
+SOGoVacationEnabled: true
+SOGoForwardEnabled: true
+SOGoSieveScriptsEnabled: true
+SOGoMailAuxiliaryUserAccountsEnabled: true
+SOGoTrustProxyAuthentication: false
+SOGoXSRFValidationEnabled: false
+
+# General - SOGoTimeZone *MUST* be defined
+SOGoLanguage: English
+SOGoTimeZone: America/Montreal
+SOGoCalendarDefaultRoles:
+  - PublicDAndTViewer
+  - ConfidentialDAndTViewer
+SOGoSuperUsernames: [sogo1, sogo2]
+SxVMemLimit: 384
+WOPidFile: "/var/run/sogo/sogo.pid"
+SOGoMemcachedHost: "/var/run/memcached.sock"
+
+# Debug
+SOGoDebugRequests: true
+SoDebugBaseURL: true
+ImapDebugEnabled: true
+LDAPDebugEnabled: true
+PGDebugEnabled: true
+MySQL4DebugEnabled: true
+SOGoUIxDebugEnabled: true
+WODontZipResponse: true
+WOLogFile: "/var/log/sogo/sogo.log"

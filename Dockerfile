@@ -1,28 +1,93 @@
-FROM ghcr.io/linuxserver/baseimage-debian:bookworm
+FROM debian:bookworm AS builder
 
-# install operating system packages
-RUN apt-get update -y && apt-get install wget make git gettext gnupg2 -y
-RUN wget -O- "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xCB2D3A2AA0030E2C" | gpg --dearmor | apt-key add -
-RUN wget -O- "https://keys.openpgp.org/vks/v1/by-fingerprint/74FFC6D72B925A34B5D356BDF8A27B36A6E2EAE9" | gpg --dearmor | apt-key add -
-RUN apt-get update && \
-    apt-get install apt-transport-https -y && \
-    echo "deb http://packages.sogo.nu/nightly/5/debian/ bookworm bookworm" >> /etc/apt/sources.list && \
-    apt-get update && \
-    apt-get install sogo sope4.9-gdl1-postgresql sope4.9-gdl1-mysql default-mysql-client nginx -y && \
-    rm -rf /var/lib/apt/lists/*
+ARG VERSION=5.10.0
 
-COPY ./bashutil/* /usr/local/bin
-COPY ./default-sogo.conf /etc/default/sogo
+ADD https://packages.sogo.nu/sources/SOGo-${VERSION}.tar.gz /tmp/SOGo.tar.gz
+ADD https://packages.sogo.nu/sources/SOPE-${VERSION}.tar.gz /tmp/SOPE.tar.gz
 
-# add config and init files
-ADD config /opt/docker-config
-ADD init /opt/docker-init
+RUN apt-get update -y && \
+    apt-get install -y \
+        git \
+        zip \
+        wget \
+        make \
+        gnustep-make \
+        gnustep-base-common \
+        gnustep-base-runtime \
+        libgnustep-base-dev \
+        gobjc \
+        libxml2-dev \
+        libssl-dev \
+        libldap-dev \
+        libpq-dev \
+        libmemcached-dev \
+        default-libmysqlclient-dev \
+        libytnef0-dev \
+        zlib1g-dev \
+        liblasso3-dev \
+        libcurl4-gnutls-dev \
+        libexpat1-dev \
+        libpopt-dev \
+        libsbjson-dev \
+        libsbjson2.3 \
+        libcurl4 \
+        liboath-dev \
+        libsodium-dev \
+        libzip-dev && \
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir /tmp/SOGo && \
+    mkdir /tmp/SOPE && \
+    tar xf /tmp/SOGo.tar.gz -C /tmp/SOGo --strip-components 1 && \
+    tar xf /tmp/SOPE.tar.gz -C /tmp/SOPE --strip-components 1 && \
+    cd /tmp/SOPE && \
+    ./configure --with-gnustep --enable-debug --disable-strip && \
+    make && \
+    make install && \
+    cd /tmp/SOGo && \
+    ./configure --enable-debug --disable-strip && \
+    make && \
+    make install
 
-RUN chmod +x /opt/docker-init/entrypoint && \
-    chmod +x /usr/local/bin/bgo && \
-    chmod +x /usr/local/bin/bgowait && \
-    chmod +x /usr/local/bin/retry
+FROM debian:bookworm-slim
 
-# start from init folder
-WORKDIR /opt/docker-init
-ENTRYPOINT ["/opt/docker-init/entrypoint"]
+ARG ARCH=amd64
+
+# install dependencies
+
+RUN apt-get update -y && \
+    apt-get install -y \
+        wget \
+        make \
+        git \
+        cron \
+        gettext \
+        gnupg2 \
+        default-mysql-client \
+        postgresql-client \
+        nginx \
+        supervisor && \
+    rm -rf /var/lib/apt/lists/* && \
+
+# add config, binaries, libraries, and init files
+
+COPY --from=builder /usr/local/sbin/* /usr/sbin/
+COPY --from=builder /usr/local/lib/sogo/* /usr/lib/sogo/
+COPY --from=builder /usr/local/lib/GNUstep/* /usr/lib/GNUstep/
+COPY --from=builder /tmp/SOGo/Scripts/sogo-default /etc/default/sogo
+COPY --from=builder /tmp/SOGo/Scripts/sogo.cron /etc/cron.d/sogo
+COPY --from=builder /tmp/SOGo/Scripts/sogo.conf /etc/sogo/sogo.conf
+COPY --from=builder /tmp/SOGo/Scripts/* /usr/share/doc/sogo/
+
+COPY default-configs/nginx.conf /etc/nginx/sites-enabled/default
+COPY supervisord.conf /opt/supervisord.conf
+COPY config_parser.sh /opt/config_parser.sh
+COPY entrypoint.sh /opt/entrypoint.sh
+
+ADD https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${ARCH} /usr/bin/yq
+
+RUN chmod +x /opt/entrypoint.sh
+
+# start from config folder
+WORKDIR /etc/sogo
+
+ENTRYPOINT ["/opt/entrypoint.sh"]
