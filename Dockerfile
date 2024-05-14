@@ -1,9 +1,10 @@
 FROM debian:bookworm AS builder
 
-ARG VERSION=5.10.0
+ARG ARCH=amd64
+ARG SOGO_VERSION=5.10.0
 
-ADD https://packages.sogo.nu/sources/SOGo-${VERSION}.tar.gz /tmp/SOGo.tar.gz
-ADD https://packages.sogo.nu/sources/SOPE-${VERSION}.tar.gz /tmp/SOPE.tar.gz
+ADD https://packages.sogo.nu/sources/SOGo-${SOGO_VERSION}.tar.gz /tmp/SOGo.tar.gz
+ADD https://packages.sogo.nu/sources/SOPE-${SOGO_VERSION}.tar.gz /tmp/SOPE.tar.gz
 
 RUN apt-get update -y && \
     apt-get install -y \
@@ -48,25 +49,22 @@ RUN apt-get update -y && \
     make && \
     make install
 
-FROM debian:bookworm-slim
+FROM alpine:3.19
 
-ARG ARCH=amd64
+ARG ARCH
 
 # install dependencies
 
-RUN apt-get update -y && \
-    apt-get install -y \
+RUN apk update && \
+    apk add --no-cache \
         wget \
-        make \
         git \
-        cron \
         gettext \
-        gnupg2 \
-        default-mysql-client \
-        postgresql-client \
+        gnupg \
+        mysql-client \
+        postgresql16-client \
         nginx \
-        supervisor && \
-    rm -rf /var/lib/apt/lists/*
+        supervisor
 
 # add config, binaries, libraries, and init files
 
