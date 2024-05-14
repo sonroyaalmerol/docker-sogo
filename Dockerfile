@@ -55,6 +55,9 @@ FROM alpine:3.19
 
 ARG ARCH
 
+ENV PUID=1000
+ENV PGID=1000
+
 # install dependencies
 
 RUN apk update && \
