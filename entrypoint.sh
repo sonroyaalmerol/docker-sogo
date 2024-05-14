@@ -13,9 +13,6 @@ for dir in lib log run spool; do
   install -m 750 -o sogo -g sogo -d /var/$dir/sogo
 done
 
-# update timestamp on imgs,css,js to let apache know the files changed
-find /usr/lib/GNUstep/SOGo/WebServerResources -exec touch {} \;
-
 # Make example scripts in /usr/share/doc/sogo/ executable
 # (they do not really belong there, we are violating Debian
 # packaging guidelines, but OTOH moving these files now would
