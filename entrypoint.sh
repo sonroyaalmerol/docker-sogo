@@ -1,5 +1,7 @@
 #!/bin/sh
 
+. /usr/share/GNUstep/Makefiles/GNUstep.sh
+
 set -e
 
 useradd -ms /bin/bash sogo

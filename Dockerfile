@@ -104,7 +104,7 @@ RUN apt-get update -y && \
 COPY --from=builder /usr/local/sbin/* /usr/sbin/
 COPY --from=builder /usr/local/lib/sogo/* /usr/lib/sogo/
 COPY --from=builder /usr/local/lib/GNUstep/* /usr/lib/GNUstep/
-COPY --from=builder /usr/pkg/lib/GNUstep/* /usr/pkg/lib/GNUstep/
+COPY --from=builder /usr/local/share/GNUstep/* /usr/share/GNUstep/
 COPY --from=builder /tmp/SOGo/Scripts/sogo-default /etc/default/sogo
 COPY --from=builder /tmp/SOGo/Scripts/sogo.cron /etc/cron.d/sogo
 COPY --from=builder /tmp/SOGo/Scripts/sogo.conf /etc/sogo/sogo.conf
