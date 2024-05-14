@@ -4,8 +4,8 @@ set -e
 
 # Set process UID and GID at runtime
 if [ -n "$PUID" ] && [ -n "$PGID" ]; then
-  groupmod -g $PGID sogo
-  usermod -u $PUID -g $PGID sogo
+  addgroup -g $PGID sogo
+  adduser -u $PUID -G sogo -D sogo
 fi
 
 # create mandatory dirs and enforce owner+mode
