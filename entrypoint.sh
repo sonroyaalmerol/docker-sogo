@@ -4,8 +4,8 @@ set -e
 
 # Set process UID and GID at runtime
 if [ -n "$PUID" ] && [ -n "$PGID" ]; then
-  addgroup -g $PGID sogo
-  adduser -u $PUID -G sogo -D sogo
+  groupmod -g $PGID sogo
+  usermod -u $PUID -g $PGID sogo
 fi
 
 # create mandatory dirs and enforce owner+mode
@@ -29,7 +29,7 @@ if [ -z "$(ls -A /etc/sogo/sogo.conf.d)" ]; then
 else
   # Generate config file from yaml folder
   echo "Generating sogo.conf from /etc/sogo/sogo.conf.d YAML files..."
-  source /opt/config_parser.sh
+  . /opt/config_parser.sh
   GenerateConfigFile
 fi
 

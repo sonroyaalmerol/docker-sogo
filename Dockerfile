@@ -51,7 +51,7 @@ RUN apt-get update -y && \
     make && \
     make install
 
-FROM alpine:3.19
+FROM debian:bookworm-slim
 
 ARG ARCH
 
@@ -60,23 +60,45 @@ ENV PGID=1000
 
 # install dependencies
 
-RUN apk update && \
-    apk add --no-cache \
+RUN apt-get update -y && \
+    apt-get install -y \
         ca-certificates \
         tzdata \
         wget \
+        make \
         git \
+        cron \
         gettext \
-        gnupg \
-        mysql-client \
-        postgresql16-client \
+        gnupg2 \
+        default-mysql-client \
+        postgresql-client \
         nginx \
-        supervisor
+        supervisor \
+        gnustep-make \
+        libcurl4 \
+        libgcc-s1 \
+        libglib2.0-0 \
+        libgnustep-base1.28 \
+        libldap-2.5-0 \
+        libmemcached11 \
+        libsodium23 \
+        libzip4 \
+        liboath0 \
+        libobjc4 \
+        libpq5 \
+        libssl3 \
+        libxml2 \
+        zlib1g \
+        postgresql-client-common \
+        postgresql-common \
+        mysql-common && \
+    rm -rf /var/lib/apt/lists/*
 
 # add config, binaries, libraries, and init files
 
 COPY --from=builder /usr/local/sbin/* /usr/sbin/
-COPY --from=builder /usr/local/lib/* /usr/lib/
+COPY --from=builder /usr/local/lib/sogo/* /usr/lib/sogo/
+COPY --from=builder /usr/local/lib/GNUstep/* /usr/lib/GNUstep/
 COPY --from=builder /tmp/SOGo/Scripts/sogo-default /etc/default/sogo
 COPY --from=builder /tmp/SOGo/Scripts/sogo.cron /etc/cron.d/sogo
 COPY --from=builder /tmp/SOGo/Scripts/sogo.conf /etc/sogo/sogo.conf
