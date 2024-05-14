@@ -105,17 +105,17 @@ RUN apt-get update -y && \
 
 # add config, binaries, libraries, and init files
 
-COPY --from=builder /usr/local/sbin/. /usr/sbin/
-COPY --from=builder /usr/local/lib/sogo/. /usr/lib/sogo/
-COPY --from=builder /usr/lib/GNUstep/. /usr/lib/GNUstep/
-COPY --from=builder /usr/local/lib/GNUstep/. /usr/lib/GNUstep/
-COPY --from=builder /usr/include/GNUstep/. /usr/include/GNUstep/
-COPY --from=builder /usr/local/include/GNUstep/. /usr/include/GNUstep/
-COPY --from=builder /usr/share/GNUstep/. /usr/share/GNUstep/
+COPY --from=builder /usr/local/sbin/ /usr/sbin/
+COPY --from=builder /usr/local/lib/sogo/ /usr/lib/sogo/
+COPY --from=builder /usr/lib/GNUstep/ /usr/lib/GNUstep/
+COPY --from=builder /usr/local/lib/GNUstep/ /usr/lib/GNUstep/
+COPY --from=builder /usr/include/GNUstep/ /usr/include/GNUstep/
+COPY --from=builder /usr/local/include/GNUstep/ /usr/include/GNUstep/
+COPY --from=builder /usr/share/GNUstep/ /usr/share/GNUstep/
 COPY --from=builder /tmp/SOGo/Scripts/sogo-default /etc/default/sogo
 COPY --from=builder /tmp/SOGo/Scripts/sogo.cron /etc/cron.d/sogo
 COPY --from=builder /tmp/SOGo/Scripts/sogo.conf /etc/sogo/sogo.conf
-COPY --from=builder /tmp/SOGo/Scripts/. /usr/share/doc/sogo/
+COPY --from=builder /tmp/SOGo/Scripts/ /usr/share/doc/sogo/
 
 COPY default-configs/nginx.conf /etc/nginx/sites-enabled/default
 COPY supervisord.conf /opt/supervisord.conf
