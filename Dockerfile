@@ -75,7 +75,11 @@ RUN apt-get update -y && \
         postgresql-client \
         nginx \
         supervisor \
-        gnustep-make \
+        gnustep-base-runtime \
+        libc6 \
+        libcrypt1 \
+        liblasso3 \
+        lsb-base \
         libwbxml2-1 \
         libcurl4 \
         libgcc-s1 \
@@ -103,7 +107,9 @@ RUN apt-get update -y && \
 
 COPY --from=builder /usr/local/sbin/* /usr/sbin/
 COPY --from=builder /usr/local/lib/sogo/* /usr/lib/sogo/
+COPY --from=builder /usr/lib/GNUstep/* /usr/lib/GNUstep/
 COPY --from=builder /usr/local/lib/GNUstep/* /usr/lib/GNUstep/
+COPY --from=builder /usr/include/GNUstep/* /usr/include/GNUstep/
 COPY --from=builder /usr/local/include/GNUstep/* /usr/include/GNUstep/
 COPY --from=builder /usr/share/GNUstep/* /usr/share/GNUstep/
 COPY --from=builder /tmp/SOGo/Scripts/sogo-default /etc/default/sogo
