@@ -1,7 +1,9 @@
-FROM debian:bookworm AS builder
-
 ARG ARCH=amd64
 ARG SOGO_VERSION=5.10.0
+
+FROM debian:bookworm AS builder
+
+ARG SOGO_VERSION
 
 ADD https://packages.sogo.nu/sources/SOGo-${SOGO_VERSION}.tar.gz /tmp/SOGo.tar.gz
 ADD https://packages.sogo.nu/sources/SOPE-${SOGO_VERSION}.tar.gz /tmp/SOPE.tar.gz
