@@ -2,6 +2,8 @@
 
 set -e
 
+useradd -ms /bin/bash sogo
+
 # Set process UID and GID at runtime
 if [ -n "$PUID" ] && [ -n "$PGID" ]; then
   groupmod -g $PGID sogo
