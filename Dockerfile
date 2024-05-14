@@ -19,6 +19,7 @@ RUN apt-get update -y && \
         gnustep-base-runtime \
         libgnustep-base-dev \
         gobjc \
+        libwbxml2-dev \
         libxml2-dev \
         libssl-dev \
         libldap-dev \
@@ -75,6 +76,7 @@ RUN apt-get update -y && \
         nginx \
         supervisor \
         gnustep-make \
+        libwbxml2-1 \
         libcurl4 \
         libgcc-s1 \
         libglib2.0-0 \
@@ -88,6 +90,9 @@ RUN apt-get update -y && \
         libpq5 \
         libssl3 \
         libxml2 \
+        libsope1 \
+        libsbjson2.3 \
+        libytnef0 \
         zlib1g \
         postgresql-client-common \
         postgresql-common \
@@ -99,6 +104,8 @@ RUN apt-get update -y && \
 COPY --from=builder /usr/local/sbin/* /usr/sbin/
 COPY --from=builder /usr/local/lib/sogo/* /usr/lib/sogo/
 COPY --from=builder /usr/local/lib/GNUstep/* /usr/lib/GNUstep/
+COPY --from=builder /usr/pkg/share/GNUstep/* /usr/pkg/share/GNUstep/
+COPY --from=builder /usr/pkg/lib/GNUstep/* /usr/pkg/lib/GNUstep/
 COPY --from=builder /tmp/SOGo/Scripts/sogo-default /etc/default/sogo
 COPY --from=builder /tmp/SOGo/Scripts/sogo.cron /etc/cron.d/sogo
 COPY --from=builder /tmp/SOGo/Scripts/sogo.conf /etc/sogo/sogo.conf
