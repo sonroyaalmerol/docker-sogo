@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -e
 
@@ -14,7 +14,7 @@ for dir in lib log run spool; do
 done
 
 # update timestamp on imgs,css,js to let apache know the files changed
-find /usr/lib/GNUstep/SOGo/WebServerResources  -exec touch {} \;
+find /usr/lib/GNUstep/SOGo/WebServerResources -exec touch {} \;
 
 # Make example scripts in /usr/share/doc/sogo/ executable
 # (they do not really belong there, we are violating Debian

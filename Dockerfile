@@ -59,6 +59,8 @@ ARG ARCH
 
 RUN apk update && \
     apk add --no-cache \
+        ca-certificates \
+        tzdata \
         wget \
         git \
         gettext \

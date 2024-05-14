@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 customConfigFolder="/etc/sogo/sogo.conf.d/"
 configPath="/etc/sogo/sogo.conf"
@@ -23,7 +23,7 @@ ParsePrimitives() {
       echo -n "YES"
     elif [ "$value" = "false" ]; then
       echo -n "NO"
-    elif [[ "$value" =~ ^[0-9]+$ ]]; then
+    elif echo "$value" | grep -qE '^[0-9]+$'; then
       echo -n "$value"
     else
       echo -n "\"$value\""
@@ -63,19 +63,19 @@ ParseValues() {
       else
         ParseValues "$i" "$path | .[$i]" $((level + 1))
       fi
-      ((i++))
+      i=$((i+1))
     done
     
     Println 0 ""
     Println $((level + 1)) ");"
   elif [ "$valueType" = '!!map' ]; then
-    if [[ "$key" =~ ^[0-9]+$ ]]; then
+    if echo "$key" | grep -qE '^[0-9]+$'; then
       Println $((level + 1)) "{"
     else
       Println $((level + 1)) "$key = {"
     fi
     
-    for subKey in $(yq "$path | keys | .[]" "$yamlPath"); do
+    yq "$path | keys | .[]" "$yamlPath" | while IFS= read -r subKey; do
       ParseValues "$subKey" "$path | .$subKey" $((level + 1))
     done
     Print $((level + 1)) "}"
@@ -131,9 +131,8 @@ EOF
   Println 0 "{"
   Println 0 "$disclaimerMessage"
   Println 0 ""
-  rootKeys=$(yq 'keys | .[]' "$yamlPath" | sort -u)
-  while IFS= read -r rootKey; do
+  yq 'keys | .[]' "$yamlPath" | sort -u | while IFS= read -r rootKey; do
     ParseValues "$rootKey" ".$rootKey" 0
-  done <<< "$rootKeys"
+  done
   Print 0 "}"
 }
