@@ -120,14 +120,22 @@ COPY entrypoint.sh /opt/entrypoint.sh
 
 ADD https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${TARGETARCH} /usr/bin/yq
 
-RUN echo "/usr/local/lib/sogo" > /etc/ld.so.conf.d/sogo.conf && \
+RUN a2enmod \
+        headers \
+        proxy \
+        proxy_http \
+        rewrite \
+        ssl && \
+    echo "/usr/local/lib/sogo" > /etc/ld.so.conf.d/sogo.conf && \
     ldconfig && \
     groupadd --system sogo && \
     useradd --system --gid sogo sogo && \
     mkdir -p /usr/lib/GNUstep/ && \
     (ln -s /usr/local/lib/*.so /usr/lib/ || :) && \
     (ln -s /usr/local/lib/GNUstep/* /usr/lib/GNUstep/ || :) && \
-    (ln -s /usr/local/lib/GNUstep/Libraries/Resources/* /usr/lib/GNUstep/Libraries/Resources/ || :) && \
+    ln -s /usr/local/lib/GNUstep/Libraries/Resources /usr/lib/GNUstep/Libraries/Resources && \
+    ln -s /usr/local/include/GNUstep /usr/include/GNUstep && \
+    ln -s /usr/local/lib/sogo /usr/lib/sogo && \
     ln -s /usr/local/sbin/sogo-tool /usr/sbin/sogo-tool && \
     ln -s /usr/local/sbin/sogo-ealarms-notify /usr/sbin/sogo-ealarms-notify && \
     ln -s /usr/local/sbin/sogo-slapd-sockd /usr/sbin/sogo-slapd-sockd && \
