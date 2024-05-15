@@ -115,6 +115,7 @@ COPY --from=builder /tmp/SOGo/Apache/SOGo.conf /etc/apache2/conf-available/SOGo.
 
 COPY supervisord.conf /opt/supervisord.conf
 COPY config_parser.sh /opt/config_parser.sh
+COPY sogod.sh /opt/sogod.sh
 COPY entrypoint.sh /opt/entrypoint.sh
 
 ADD https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${TARGETARCH} /usr/bin/yq
@@ -136,7 +137,8 @@ RUN a2enmod \
     ln -s /usr/local/sbin/sogo-slapd-sockd /usr/sbin/sogo-slapd-sockd && \
     ln -s /etc/apache2/conf-available/SOGo.conf /etc/apache2/conf-enabled/SOGo.conf && \
     chmod +rx /usr/bin/yq && \
-    chmod +rx /opt/entrypoint.sh
+    chmod +rx /opt/entrypoint.sh && \
+    chmod +rx /opt/sogod.sh
 
 # start from config folder
 WORKDIR /etc/sogo
