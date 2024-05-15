@@ -47,7 +47,8 @@ RUN apt-get update -y && \
     make && \
     make install && \
     cd /tmp/SOGo && \
-    ./configure --enable-debug --disable-strip && \
+    ./configure --enable-debug --disable-strip --enable-saml2 \
+        --enable-mfa --enable-sodium --with-ldap-config && \
     make && \
     make install
 
@@ -103,10 +104,6 @@ RUN apt-get update -y && \
 # add config, binaries, libraries, and init files
 COPY --from=builder /usr/local/sbin/ /usr/local/sbin/
 COPY --from=builder /usr/local/lib/ /usr/local/lib/
-
-COPY --from=builder /tmp/SOGo/Scripts/sogo-default /etc/default/sogo
-COPY --from=builder /tmp/SOGo/Scripts/sogo.cron /etc/cron.d/sogo
-COPY --from=builder /tmp/SOGo/Scripts/sogo.conf /etc/sogo/sogo.conf
 COPY --from=builder /tmp/SOGo/Scripts/ /usr/share/doc/sogo/
 COPY --from=builder /tmp/SOGo/Apache/SOGo.conf /etc/apache2/conf-available/SOGo.conf
 
@@ -128,6 +125,10 @@ RUN a2enmod \
     ln -s /usr/local/sbin/sogo-ealarms-notify /usr/sbin/sogo-ealarms-notify && \
     ln -s /usr/local/sbin/sogo-slapd-sockd /usr/sbin/sogo-slapd-sockd && \
     ln -s /etc/apache2/conf-available/SOGo.conf /etc/apache2/conf-enabled/SOGo.conf && \
+    mkdir -p /etc/cron.d /etc/default /etc/sogo && \
+    mv /usr/share/doc/sogo/sogo.cron /etc/cron.d/sogo && \
+    mv /usr/share/doc/sogo/sogo-default /etc/default/sogo && \
+    mv /usr/share/doc/sogo/sogo.conf /etc/sogo/sogo.conf && \
     chmod +rx /usr/bin/yq && \
     chmod +rx /opt/entrypoint.sh && \
     chmod +rx /opt/sogod.sh
