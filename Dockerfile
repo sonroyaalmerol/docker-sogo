@@ -11,6 +11,7 @@ RUN apt-get update -y && \
         zip \
         wget \
         make \
+        cmake \
         gnustep-make \
         gnustep-base-common \
         gnustep-base-runtime \
@@ -18,15 +19,16 @@ RUN apt-get update -y && \
         gobjc \
         libwbxml2-dev \
         libxml2-dev \
+        libxml2-utils \
         libssl-dev \
-        libldap-dev \
+        libldap2-dev \
         libpq-dev \
         libmemcached-dev \
         default-libmysqlclient-dev \
         libytnef0-dev \
         zlib1g-dev \
         liblasso3-dev \
-        libcurl4-gnutls-dev \
+        libcurl4-openssl-dev \
         libexpat1-dev \
         libpopt-dev \
         libsbjson-dev \
