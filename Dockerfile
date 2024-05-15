@@ -1,6 +1,3 @@
-ARG ARCH=amd64
-ARG SOGO_VERSION=5.10.0
-
 FROM debian:bookworm AS builder
 
 ARG SOGO_VERSION
@@ -54,7 +51,7 @@ RUN apt-get update -y && \
 
 FROM debian:bookworm-slim
 
-ARG ARCH
+ARG TARGETARCH
 
 ENV PUID=1000
 ENV PGID=1000
@@ -122,7 +119,7 @@ COPY supervisord.conf /opt/supervisord.conf
 COPY config_parser.sh /opt/config_parser.sh
 COPY entrypoint.sh /opt/entrypoint.sh
 
-ADD https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${ARCH} /usr/bin/yq
+ADD https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${TARGETARCH} /usr/bin/yq
 
 RUN rsync -avLkq /usr/local/lib/GNUstep/ /usr/lib/GNUstep && \
     rsync -avLkq /usr/local/include/GNUstep/ /usr/include/GNUstep && \

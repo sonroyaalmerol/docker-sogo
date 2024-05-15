@@ -7,11 +7,24 @@ on:  # yamllint disable-line rule:truthy
       - 'README.md'
       - 'sample-config.conf'
       - 'sample-config.yaml'
+      - '.github/**'
 
 jobs:
+  check_versions:
+    name: Develop - Version checking
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.sogo.outputs.VERSION }}
+    steps:
+      - name: Get latest version of SOGo
+        id: sogo
+        run: |
+          echo "VERSION=$(curl -s https://api.github.com/repos/Alinto/sogo/releases/latest | jq -r '.tag_name' | sed 's/SOGo-//')" >> "$GITHUB_OUTPUT"
+
   # Builds the Dockerfile and pushes it to dockerhub and GHCR
   develop:
     name: Develop - Docker image
+    needs: check_versions
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -42,3 +55,5 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            SOGO_VERSION=${{ needs.check_versions.outputs.version }}
