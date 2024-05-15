@@ -3,6 +3,10 @@ name: Developer image
 on:  # yamllint disable-line rule:truthy
   push:
     branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - 'sample-config.conf'
+      - 'sample-config.yaml'
 
 jobs:
   # Builds the Dockerfile and pushes it to dockerhub and GHCR
