@@ -62,9 +62,7 @@ RUN apt-get update -y && \
     apt-get install -y \
         ca-certificates \
         tzdata \
-        wget \
-        make \
-        git \
+        curl \
         cron \
         gettext \
         gnupg2 \
@@ -111,7 +109,7 @@ COPY --from=builder /tmp/SOGo/Scripts/sogo-default /etc/default/sogo
 COPY --from=builder /tmp/SOGo/Scripts/sogo.cron /etc/cron.d/sogo
 COPY --from=builder /tmp/SOGo/Scripts/sogo.conf /etc/sogo/sogo.conf
 COPY --from=builder /tmp/SOGo/Scripts/ /usr/share/doc/sogo/
-COPY --from=builder /tmp/SOGO/Apache/SOGo.conf /etc/apache2/conf-available/SOGo.conf
+COPY --from=builder /tmp/SOGo/Apache/SOGo.conf /etc/apache2/conf-available/SOGo.conf
 
 COPY supervisord.conf /opt/supervisord.conf
 COPY config_parser.sh /opt/config_parser.sh
