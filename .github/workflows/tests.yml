@@ -75,9 +75,9 @@ jobs:
 
       - name: Setup test configurations
         run: |
-          mkdir -p /test-sogo
+          mkdir -p /tmp/test-sogo
           plist_config=$(cat sample-config.conf)
-          echo "$plist_config" > /test-sogo/sogo.conf
+          echo "$plist_config" > /tmp/test-sogo/sogo.conf
       
       - name: Setup test PostgreSQL
         run: |
@@ -96,7 +96,7 @@ jobs:
             --name sogo \
             --network test-sogo \
             -p 80:80/tcp \
-            -v /test-sogo/sogo.conf:/etc/sogo/sogo.conf
+            -v /tmp/test-sogo/sogo.conf:/etc/sogo/sogo.conf
             --stop-timeout 30 \
             test-sogo:${{ github.run_id }}
 
@@ -170,9 +170,9 @@ jobs:
 
       - name: Setup test configurations
         run: |
-          mkdir -p /test-sogo
+          mkdir -p /tmp/test-sogo
           yaml_config=$(cat sample-config.yaml)
-          echo "$yaml_config" > /test-sogo/sogo.yaml
+          echo "$yaml_config" > /tmp/test-sogo/sogo.yaml
       
       - name: Setup test PostgreSQL
         run: |
@@ -191,7 +191,7 @@ jobs:
             --name sogo \
             --network test-sogo \
             -p 80:80/tcp \
-            -v /test-sogo/sogo.yaml:/etc/sogo/sogo.conf.d/00-test.yaml
+            -v /tmp/test-sogo/sogo.yaml:/etc/sogo/sogo.conf.d/00-test.yaml
             --stop-timeout 30 \
             test-sogo:${{ github.run_id }}
 
