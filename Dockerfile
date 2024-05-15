@@ -50,7 +50,7 @@ RUN apt-get update -y && \
     make install && \
     cd /tmp/SOGo && \
     ./configure --enable-debug --disable-strip --enable-saml2 \
-        --enable-mfa --enable-sodium --enable-ldap-config && \
+        --enable-mfa --enable-sodium && \
     make && \
     make install
 
@@ -127,10 +127,11 @@ RUN a2enmod \
     ln -s /usr/local/sbin/sogo-ealarms-notify /usr/sbin/sogo-ealarms-notify && \
     ln -s /usr/local/sbin/sogo-slapd-sockd /usr/sbin/sogo-slapd-sockd && \
     ln -s /etc/apache2/conf-available/SOGo.conf /etc/apache2/conf-enabled/SOGo.conf && \
-    mkdir -p /etc/cron.d /etc/default /etc/sogo && \
+    mkdir -p /etc/cron.d /etc/default /etc/sogo /etc/logrotate.d && \
     mv /usr/share/doc/sogo/sogo.cron /etc/cron.d/sogo && \
     mv /usr/share/doc/sogo/sogo-default /etc/default/sogo && \
     mv /usr/share/doc/sogo/sogo.conf /etc/sogo/sogo.conf && \
+    mv /usr/share/doc/sogo/logrotate /etc/logrotate.d/sogo && \
     chmod +rx /usr/bin/yq && \
     chmod +rx /opt/entrypoint.sh && \
     chmod +rx /opt/sogod.sh
