@@ -48,7 +48,7 @@ RUN apt-get update -y && \
     make install && \
     cd /tmp/SOGo && \
     ./configure --enable-debug --disable-strip --enable-saml2 \
-        --enable-mfa --enable-sodium --with-ldap-config && \
+        --enable-mfa --enable-sodium --enable-ldap-config && \
     make && \
     make install
 
