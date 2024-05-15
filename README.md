@@ -3,7 +3,7 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/sonroyaalmerol/docker-sogo)](https://hub.docker.com/r/sonroyaalmerol/docker-sogo)
 [![Docker Stars](https://img.shields.io/docker/stars/sonroyaalmerol/docker-sogo)](https://hub.docker.com/r/sonroyaalmerol/docker-sogo)
 [![Image Size](https://img.shields.io/docker/image-size/sonroyaalmerol/docker-sogo/latest)](https://hub.docker.com/r/sonroyaalmerol/docker-sogo/tags)
-[![Release](https://github.com/sonroyaalmerol/docker-sogo/actions/workflows/release.yml/badge.svg)](https://github.com/sonroyaalmerol/docker-sogo/actions/workflows/release.yml)
+[![Development](https://github.com/sonroyaalmerol/docker-sogo/actions/workflows/develop.yml/badge.svg)](https://github.com/sonroyaalmerol/docker-sogo/actions/workflows/develop.yml)
 [![Release](https://github.com/sonroyaalmerol/docker-sogo/actions/workflows/release.yml/badge.svg)](https://github.com/sonroyaalmerol/docker-sogo/actions/workflows/release.yml)
 
 ## What is SOGo?
@@ -24,7 +24,7 @@ SOGo is the missing component of your infrastructure; it sits in the middle of y
 This container is mainly built with Kubernetes in mind. As such, one of the main unique features of this container is its ability to use YAML configuration files. 
 
 - **Automated Builds**: SOGo releases are checked every day for updates and will trigger the Docker image build automatically.
-- **Follows the official SOGo version tagging**: Docker image tags follows the version tagging of SOGo releases.
+- **Follows the official SOGo version tagging**: Docker image tags follows the version tagging of SOGo releases starting from version `5.10.0`. Backporting to different versions will be considered.
 - **YAML Configuration Support**: Users can define SOGo configurations using YAML files, allowing for easier management and version control. The included script automatically merges and converts YAML configurations into the required OpenStep plist format, simplifying the setup process.
 
 ## Usage
