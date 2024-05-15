@@ -2,15 +2,16 @@
 
 . /usr/share/GNUstep/Makefiles/GNUstep.sh
 
-#Solve libssl bug for Mail View
-if [[ -z "${LD_PRELOAD}" ]]; then
-	LIBSSL_LOCATION=$(find / -type f -name "libssl.so.*" -print -quit);echo "LD_PRELOAD=$LIBSSL_LOCATION" >> /etc/default/sogo
-	echo "LD_LIBRARY_PATH=/usr/local/lib/sogo:/usr/local/lib:$LD_LIBRARY_PATH" >> /etc/default/sogo
-	export LD_PRELOAD=$LIBSSL_LOCATION
+# Solve libssl bug for Mail View
+if [ -z "$LD_PRELOAD" ]; then
+  LIBSSL_LOCATION=$(find / -type f -name "libssl.so.*" -print -quit)
+  echo "LD_PRELOAD=$LIBSSL_LOCATION" >> /etc/default/sogo
+  echo "LD_LIBRARY_PATH=/usr/local/lib/sogo:/usr/local/lib:$LD_LIBRARY_PATH" >> /etc/default/sogo
+  export LD_PRELOAD=$LIBSSL_LOCATION
 else
-	echo "LD_PRELOAD=$LD_PRELOAD" >> /etc/default/sogo
-	echo "LD_LIBRARY_PATH=/usr/local/lib/sogo:/usr/local/lib:$LD_LIBRARY_PATH" >> /etc/default/sogo
-	export LD_PRELOAD=$LD_PRELOAD
+  echo "LD_PRELOAD=$LD_PRELOAD" >> /etc/default/sogo
+  echo "LD_LIBRARY_PATH=/usr/local/lib/sogo:/usr/local/lib:$LD_LIBRARY_PATH" >> /etc/default/sogo
+  export LD_PRELOAD=$LD_PRELOAD
 fi
 
 # Set process UID and GID at runtime
