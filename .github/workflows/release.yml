@@ -10,7 +10,7 @@ jobs:
     name: Release - Version checking
     runs-on: ubuntu-latest
     outputs:
-      base_version: ${{ steps.image.outputs.BASE_VERSION }}
+      base_version: ${{ steps.sogo.outputs.VERSION }}
       revision: ${{ steps.image.outputs.REVISION }}
       next_revision: ${{ steps.image.outputs.NEXT_REVISION }}
       release: ${{ steps.condition.outputs.RELEASE }}
