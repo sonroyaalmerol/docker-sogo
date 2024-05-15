@@ -23,7 +23,7 @@ SOGo is the missing component of your infrastructure; it sits in the middle of y
 
 This container is mainly built with Kubernetes in mind. As such, one of the main unique features of this container is its ability to use YAML configuration files. 
 
-- **Automated Builds**: SOGo releases are checked every day for updates and will trigger the Docker image build automatically.
+- **Automated Builds**: SOGo **stable** releases are checked every day for updates and will trigger the Docker image build automatically.
 - **Follows the official SOGo version tagging**: Docker image tags follows the version tagging of SOGo releases starting from version `5.10.0`. Backporting to different versions will be considered.
 - **YAML Configuration Support**: Users can define SOGo configurations using YAML files, allowing for easier management and version control. The included script automatically merges and converts YAML configurations into the required OpenStep plist format, simplifying the setup process.
 
