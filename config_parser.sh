@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 customConfigFolder="/etc/sogo/sogo.conf.d/"
 configPath="/etc/sogo/sogo.conf"
