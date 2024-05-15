@@ -139,4 +139,6 @@ RUN a2enmod \
 # start from config folder
 WORKDIR /etc/sogo
 
+# test test
+
 ENTRYPOINT ["/opt/entrypoint.sh"]
