@@ -73,25 +73,27 @@ RUN apt-get update -y && \
         gnustep-base-runtime \
         libc6 \
         libcrypt1 \
-        liblasso3 \
-        lsb-base \
-        libwbxml2-1 \
         libcurl4 \
         libgcc-s1 \
         libglib2.0-0 \
         libgnustep-base1.28 \
-        libldap-2.5-0 \
+        libgnutls30 \
+        liblasso3 \
+        libldap \
+        libmariadb3 \
         libmemcached11 \
-        libsodium23 \
-        libzip4 \
         liboath0 \
         libobjc4 \
         libpq5 \
-        libssl3 \
-        libxml2 \
-        libsope1 \
         libsbjson2.3 \
+        libsodium23 \
+        libssl3 \
+        libwbxml2-1 \
+        libxml2 \
         libytnef0 \
+        libzip4 \
+        tmpreaper \
+        zip \
         zlib1g \
         postgresql-client-common \
         postgresql-common \
@@ -100,8 +102,9 @@ RUN apt-get update -y && \
 
 # add config, binaries, libraries, and init files
 COPY --from=builder /usr/local/sbin/ /usr/local/sbin/
-COPY --from=builder /usr/local/lib/sogo/ /usr/local/lib/sogo/
+COPY --from=builder /usr/local/lib/*.so /usr/local/lib/
 COPY --from=builder /usr/local/lib/GNUstep/ /usr/local/lib/GNUstep/
+COPY --from=builder /usr/local/lib/sogo/*.so /usr/local/lib/sogo/
 COPY --from=builder /usr/local/include/GNUstep/ /usr/local/include/GNUstep/
 COPY --from=builder /usr/share/GNUstep/Makefiles/ /usr/share/GNUstep/Makefiles/
 COPY --from=builder /etc/GNUstep/ /etc/GNUstep/
@@ -122,10 +125,13 @@ RUN echo "/usr/local/lib/sogo" > /etc/ld.so.conf.d/sogo.conf && \
     groupadd --system sogo && \
     useradd --system --gid sogo sogo && \
     mkdir -p /usr/lib/GNUstep/ && \
-    ln -s /usr/local/lib/GNUstep/SOGo /usr/lib/GNUstep/SOGo && \
+    (ln -s /usr/local/lib/*.so /usr/lib/ || :) && \
+    (ln -s /usr/local/lib/GNUstep/* /usr/lib/GNUstep/ || :) && \
+    (ln -s /usr/local/lib/GNUstep/Libraries/Resources/* /usr/lib/GNUstep/Libraries/Resources/ || :) && \
     ln -s /usr/local/sbin/sogo-tool /usr/sbin/sogo-tool && \
     ln -s /usr/local/sbin/sogo-ealarms-notify /usr/sbin/sogo-ealarms-notify && \
     ln -s /usr/local/sbin/sogo-slapd-sockd /usr/sbin/sogo-slapd-sockd && \
+    ln -s /etc/apache2/conf-available/SOGo.conf /etc/apache2/conf-enabled/SOGo.conf && \
     chmod +rx /usr/bin/yq && \
     chmod +rx /opt/entrypoint.sh
 
