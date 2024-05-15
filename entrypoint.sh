@@ -4,7 +4,12 @@
 
 set -e
 
-useradd -ms /bin/bash sogo
+# Check if user "sogo" does not exist
+if ! id "sogo" &>/dev/null; then
+    # Create user "sogo"
+    useradd -ms /bin/bash sogo
+    echo "User 'sogo' has been created."
+fi
 
 # Set process UID and GID at runtime
 if [ -n "$PUID" ] && [ -n "$PGID" ]; then

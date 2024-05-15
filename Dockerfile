@@ -128,7 +128,8 @@ RUN rsync -avLkq /usr/local/lib/GNUstep/ /usr/lib/GNUstep && \
     rsync -avLkq /usr/local/include/GNUstep/ /usr/include/GNUstep && \
     rm -rf /usr/local/lib/GNUstep && \
     rm -rf /usr/local/include/GNUstep && \
-    chmod +x /opt/entrypoint.sh
+    chmod +rx /usr/bin/yq && \
+    chmod +rx /opt/entrypoint.sh
 
 # start from config folder
 WORKDIR /etc/sogo
