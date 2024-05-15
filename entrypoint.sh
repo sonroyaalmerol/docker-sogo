@@ -44,10 +44,5 @@ chmod 640 /etc/sogo/sogo.conf
 chown root:sogo /etc/sogo/sogo.conf
 chmod +x /usr/sbin/sogod
 
-PIDFILE=/var/run/sogo/sogo.pid
-LOGFILE=/dev/fd/1
-
-export DAEMON_OPTS="-WOPidFile $PIDFILE -WOLogFile $LOGFILE"
-
 # Start supervisor
 /usr/bin/supervisord -c /opt/supervisord.conf
