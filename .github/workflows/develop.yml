@@ -55,5 +55,7 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             SOGO_VERSION=${{ needs.check_versions.outputs.version }}

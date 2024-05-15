@@ -103,6 +103,10 @@ RUN apt-get update -y && \
 # add config, binaries, libraries, and init files
 COPY --from=builder /usr/local/sbin/ /usr/local/sbin/
 COPY --from=builder /usr/local/lib/ /usr/local/lib/
+
+COPY --from=builder /tmp/SOGo/Scripts/sogo-default /etc/default/sogo
+COPY --from=builder /tmp/SOGo/Scripts/sogo.cron /etc/cron.d/sogo
+COPY --from=builder /tmp/SOGo/Scripts/sogo.conf /etc/sogo/sogo.conf
 COPY --from=builder /tmp/SOGo/Scripts/ /usr/share/doc/sogo/
 COPY --from=builder /tmp/SOGo/Apache/SOGo.conf /etc/apache2/conf-available/SOGo.conf
 
@@ -118,17 +122,12 @@ RUN a2enmod \
     ldconfig && \
     groupadd --system sogo && \
     useradd --system --gid sogo sogo && \
-    mkdir -p /usr/lib/GNUstep/ && \
-    ln -s /usr/local/lib/GNUstep/SOGo /usr/lib/GNUstep/SOGo && \
     (ln -s /usr/local/lib/GNUstep/* /usr/lib/GNUstep/ || :) && \
-    (ln -s /usr/local/lib/GNUstep/Libraries/Resources/* /usr/lib/GNUstep/Libraries/Resources/ || :) && \
+    ln -s /usr/local/lib/GNUstep/Libraries/Resources /usr/lib/GNUstep/Libraries/Resources && \
     ln -s /usr/local/sbin/sogo-tool /usr/sbin/sogo-tool && \
     ln -s /usr/local/sbin/sogo-ealarms-notify /usr/sbin/sogo-ealarms-notify && \
     ln -s /usr/local/sbin/sogo-slapd-sockd /usr/sbin/sogo-slapd-sockd && \
     ln -s /etc/apache2/conf-available/SOGo.conf /etc/apache2/conf-enabled/SOGo.conf && \
-    mv /usr/share/doc/sogo/sogo.cron /etc/cron.d/sogo && \
-    mv /usr/share/doc/sogo/sogo-default /etc/default/sogo && \
-    mv /usr/share/doc/sogo/sogo.conf /etc/sogo/sogo.conf && \
     chmod +rx /usr/bin/yq && \
     chmod +rx /opt/entrypoint.sh && \
     chmod +rx /opt/sogod.sh
