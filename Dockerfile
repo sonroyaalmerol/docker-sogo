@@ -64,6 +64,7 @@ ENV PGID=1000
 RUN apt-get update -y && \
     apt-get install -y \
         ca-certificates \
+        rsync \
         tzdata \
         wget \
         make \
@@ -123,8 +124,8 @@ COPY entrypoint.sh /opt/entrypoint.sh
 
 ADD https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${ARCH} /usr/bin/yq
 
-RUN cp -ra /usr/local/lib/GNUstep/. /usr/lib/GNUstep && \
-    cp -ra /usr/local/include/GNUstep/. /usr/include/GNUstep && \
+RUN rsync -avLkq /usr/local/lib/GNUstep/ /usr/lib/GNUstep && \
+    rsync -avLkq /usr/local/include/GNUstep/ /usr/include/GNUstep && \
     rm -rf /usr/local/lib/GNUstep && \
     rm -rf /usr/local/include/GNUstep && \
     chmod +x /opt/entrypoint.sh
