@@ -24,7 +24,7 @@ RUN apt-get update -y && \
         libldap2-dev \
         libpq-dev \
         libmemcached-dev \
-        default-libmysqlclient-dev \
+        libmariadb-dev-compat \
         libytnef0-dev \
         zlib1g-dev \
         liblasso3-dev \
@@ -96,31 +96,17 @@ RUN apt-get update -y && \
         libzip4 \
         tmpreaper \
         zip \
-        zlib1g \
-        postgresql-client-common \
-        postgresql-common \
-        mysql-common && \
-    rm -rf /var/lib/apt/lists/*
+        zlib1g && \
+    rm -rf /var/lib/apt/lists/* &&\
+    curl -L -o /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_$TARGETARCH
 
 # add config, binaries, libraries, and init files
 COPY --from=builder /usr/local/sbin/ /usr/local/sbin/
 COPY --from=builder /usr/local/lib/ /usr/local/lib/
-COPY --from=builder /usr/local/include/GNUstep/ /usr/local/include/GNUstep/
-COPY --from=builder /usr/share/GNUstep/Makefiles/ /usr/share/GNUstep/Makefiles/
-COPY --from=builder /usr/share/GNUstep/debian/ /usr/share/GNUstep/debian/
-COPY --from=builder /etc/GNUstep/ /etc/GNUstep/
-COPY --from=builder /tmp/SOGo/Scripts/sogo-default /etc/default/sogo
-COPY --from=builder /tmp/SOGo/Scripts/sogo.cron /etc/cron.d/sogo
-COPY --from=builder /tmp/SOGo/Scripts/sogo.conf /etc/sogo/sogo.conf
 COPY --from=builder /tmp/SOGo/Scripts/ /usr/share/doc/sogo/
 COPY --from=builder /tmp/SOGo/Apache/SOGo.conf /etc/apache2/conf-available/SOGo.conf
 
-COPY supervisord.conf /opt/supervisord.conf
-COPY config_parser.sh /opt/config_parser.sh
-COPY sogod.sh /opt/sogod.sh
-COPY entrypoint.sh /opt/entrypoint.sh
-
-ADD https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${TARGETARCH} /usr/bin/yq
+COPY scripts/ /opt/
 
 RUN a2enmod \
         headers \
@@ -140,6 +126,9 @@ RUN a2enmod \
     ln -s /usr/local/sbin/sogo-ealarms-notify /usr/sbin/sogo-ealarms-notify && \
     ln -s /usr/local/sbin/sogo-slapd-sockd /usr/sbin/sogo-slapd-sockd && \
     ln -s /etc/apache2/conf-available/SOGo.conf /etc/apache2/conf-enabled/SOGo.conf && \
+    mv /usr/share/doc/sogo/sogo.cron /etc/cron.d/sogo && \
+    mv /usr/share/doc/sogo/sogo-default /etc/default/sogo && \
+    mv /usr/share/doc/sogo/sogo.conf /etc/sogo/sogo.conf && \
     chmod +rx /usr/bin/yq && \
     chmod +rx /opt/entrypoint.sh && \
     chmod +rx /opt/sogod.sh
