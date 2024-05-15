@@ -37,6 +37,8 @@ jobs:
           file: ./Dockerfile
           load: true
           platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           tags: test-sogo:${{ github.run_id }}
           outputs: type=docker,dest=/tmp/test-sogo-${{ github.run_id }}.tar
           build-args: |
