@@ -12,6 +12,8 @@ RUN apt-get update -y && \
         wget \
         make \
         cmake \
+        python3 \
+        python-is-python3 \
         gnustep-make \
         gnustep-base-common \
         gnustep-base-runtime \
