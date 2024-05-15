@@ -132,6 +132,8 @@ RUN a2enmod \
     useradd --system --gid sogo sogo && \
     mkdir -p /usr/lib/GNUstep/ && \
     ln -s /usr/local/lib/GNUstep/SOGo /usr/lib/GNUstep/SOGo && \
+    (ln -s /usr/local/lib/GNUstep/* /usr/lib/GNUstep/ || :) && \
+    (ln -s /usr/local/lib/GNUstep/Libraries/Resources/* /usr/lib/GNUstep/Libraries/Resources/ || :) && \
     ln -s /usr/local/sbin/sogo-tool /usr/sbin/sogo-tool && \
     ln -s /usr/local/sbin/sogo-ealarms-notify /usr/sbin/sogo-ealarms-notify && \
     ln -s /usr/local/sbin/sogo-slapd-sockd /usr/sbin/sogo-slapd-sockd && \
