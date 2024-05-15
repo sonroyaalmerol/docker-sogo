@@ -79,7 +79,7 @@ RUN apt-get update -y && \
         libgnustep-base1.28 \
         libgnutls30 \
         liblasso3 \
-        libldap \
+        libldap-2.5-0 \
         libmariadb3 \
         libmemcached11 \
         liboath0 \
