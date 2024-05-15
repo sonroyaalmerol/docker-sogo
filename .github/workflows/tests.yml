@@ -49,7 +49,8 @@ jobs:
           path: /tmp/test-sogo-${{ github.run_id }}.tar
   
   end_to_end_plist:
-    name: Tests - E2E Testing 
+    name: Tests - E2E Testing
+    needs: test_build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -144,6 +145,7 @@ jobs:
 
   end_to_end_yaml:
     name: Tests - E2E Testing (YAML Config)
+    needs: test_build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
