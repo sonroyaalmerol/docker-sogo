@@ -102,11 +102,10 @@ RUN apt-get update -y && \
 
 # add config, binaries, libraries, and init files
 COPY --from=builder /usr/local/sbin/ /usr/local/sbin/
-COPY --from=builder /usr/local/lib/*.so /usr/local/lib/
-COPY --from=builder /usr/local/lib/GNUstep/ /usr/local/lib/GNUstep/
-COPY --from=builder /usr/local/lib/sogo/*.so /usr/local/lib/sogo/
+COPY --from=builder /usr/local/lib/ /usr/local/lib/
 COPY --from=builder /usr/local/include/GNUstep/ /usr/local/include/GNUstep/
 COPY --from=builder /usr/share/GNUstep/Makefiles/ /usr/share/GNUstep/Makefiles/
+COPY --from=builder /usr/share/GNUstep/debian/ /usr/share/GNUstep/debian/
 COPY --from=builder /etc/GNUstep/ /etc/GNUstep/
 COPY --from=builder /tmp/SOGo/Scripts/sogo-default /etc/default/sogo
 COPY --from=builder /tmp/SOGo/Scripts/sogo.cron /etc/cron.d/sogo
@@ -131,11 +130,7 @@ RUN a2enmod \
     groupadd --system sogo && \
     useradd --system --gid sogo sogo && \
     mkdir -p /usr/lib/GNUstep/ && \
-    (ln -s /usr/local/lib/*.so /usr/lib/ || :) && \
-    (ln -s /usr/local/lib/GNUstep/* /usr/lib/GNUstep/ || :) && \
-    ln -s /usr/local/lib/GNUstep/Libraries/Resources /usr/lib/GNUstep/Libraries/Resources && \
-    ln -s /usr/local/include/GNUstep /usr/include/GNUstep && \
-    ln -s /usr/local/lib/sogo /usr/lib/sogo && \
+    ln -s /usr/local/lib/GNUstep/SOGo /usr/lib/GNUstep/SOGo && \
     ln -s /usr/local/sbin/sogo-tool /usr/sbin/sogo-tool && \
     ln -s /usr/local/sbin/sogo-ealarms-notify /usr/sbin/sogo-ealarms-notify && \
     ln -s /usr/local/sbin/sogo-slapd-sockd /usr/sbin/sogo-slapd-sockd && \
