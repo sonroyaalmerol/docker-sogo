@@ -96,7 +96,7 @@ jobs:
             --name sogo \
             --network test-sogo \
             -p 80:80/tcp \
-            -v /tmp/test-sogo/sogo.conf:/etc/sogo/sogo.conf
+            -v /tmp/test-sogo/sogo.conf:/etc/sogo/sogo.conf \
             --stop-timeout 30 \
             test-sogo:${{ github.run_id }}
 
@@ -191,7 +191,7 @@ jobs:
             --name sogo \
             --network test-sogo \
             -p 80:80/tcp \
-            -v /tmp/test-sogo/sogo.yaml:/etc/sogo/sogo.conf.d/00-test.yaml
+            -v /tmp/test-sogo/sogo.yaml:/etc/sogo/sogo.conf.d/00-test.yaml \
             --stop-timeout 30 \
             test-sogo:${{ github.run_id }}
 
