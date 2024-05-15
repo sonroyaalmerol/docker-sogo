@@ -61,7 +61,6 @@ ENV PGID=1000
 RUN apt-get update -y && \
     apt-get install -y \
         ca-certificates \
-        rsync \
         tzdata \
         wget \
         make \
@@ -71,7 +70,7 @@ RUN apt-get update -y && \
         gnupg2 \
         default-mysql-client \
         postgresql-client \
-        nginx \
+        apache2 \
         supervisor \
         gnustep-base-runtime \
         libc6 \
@@ -102,29 +101,33 @@ RUN apt-get update -y && \
     rm -rf /var/lib/apt/lists/*
 
 # add config, binaries, libraries, and init files
-COPY --from=builder /usr/local/sbin/ /usr/sbin/
-COPY --from=builder /usr/local/lib/sogo/ /usr/lib/sogo/
-COPY --from=builder /usr/lib/GNUstep/ /usr/lib/GNUstep/
+COPY --from=builder /usr/local/sbin/ /usr/local/sbin/
+COPY --from=builder /usr/local/lib/sogo/ /usr/local/lib/sogo/
 COPY --from=builder /usr/local/lib/GNUstep/ /usr/local/lib/GNUstep/
-COPY --from=builder /usr/include/GNUstep/ /usr/include/GNUstep/
 COPY --from=builder /usr/local/include/GNUstep/ /usr/local/include/GNUstep/
-COPY --from=builder /usr/share/GNUstep/ /usr/share/GNUstep/
+COPY --from=builder /usr/share/GNUstep/Makefiles/ /usr/share/GNUstep/Makefiles/
+COPY --from=builder /etc/GNUstep/ /etc/GNUstep/
 COPY --from=builder /tmp/SOGo/Scripts/sogo-default /etc/default/sogo
 COPY --from=builder /tmp/SOGo/Scripts/sogo.cron /etc/cron.d/sogo
 COPY --from=builder /tmp/SOGo/Scripts/sogo.conf /etc/sogo/sogo.conf
 COPY --from=builder /tmp/SOGo/Scripts/ /usr/share/doc/sogo/
+COPY --from=builder /tmp/SOGO/Apache/SOGo.conf /etc/apache2/conf-available/SOGo.conf
 
-COPY default-configs/nginx.conf /etc/nginx/sites-enabled/default
 COPY supervisord.conf /opt/supervisord.conf
 COPY config_parser.sh /opt/config_parser.sh
 COPY entrypoint.sh /opt/entrypoint.sh
 
 ADD https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${TARGETARCH} /usr/bin/yq
 
-RUN rsync -avLkq /usr/local/lib/GNUstep/ /usr/lib/GNUstep && \
-    rsync -avLkq /usr/local/include/GNUstep/ /usr/include/GNUstep && \
-    rm -rf /usr/local/lib/GNUstep && \
-    rm -rf /usr/local/include/GNUstep && \
+RUN echo "/usr/local/lib/sogo" > /etc/ld.so.conf.d/sogo.conf && \
+    ldconfig && \
+    groupadd --system sogo && \
+    useradd --system --gid sogo sogo && \
+    mkdir -p /usr/lib/GNUstep/ && \
+    ln -s /usr/local/lib/GNUstep/SOGo /usr/lib/GNUstep/SOGo && \
+    ln -s /usr/local/sbin/sogo-tool /usr/sbin/sogo-tool && \
+    ln -s /usr/local/sbin/sogo-ealarms-notify /usr/sbin/sogo-ealarms-notify && \
+    ln -s /usr/local/sbin/sogo-slapd-sockd /usr/sbin/sogo-slapd-sockd && \
     chmod +rx /usr/bin/yq && \
     chmod +rx /opt/entrypoint.sh
 
