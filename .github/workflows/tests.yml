@@ -47,9 +47,9 @@ jobs:
         with:
           name: test-sogo-${{ github.run_id }}
           path: /tmp/test-sogo-${{ github.run_id }}.tar
-
+  
   end_to_end_plist:
-    name: Tests - E2E Testing
+    name: Tests - E2E Testing 
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -73,53 +73,7 @@ jobs:
       - name: Setup test configurations
         run: |
           mkdir -p /test-sogo
-
-          plist_config=$(cat <<EOF
-          {
-            /* Database configuration (mysql://, postgresql:// or oracle://) */
-            SOGoProfileURL = "postgresql://sogo:sogo@test-postgres:5432/sogo/sogo_user_profile";
-            OCSFolderInfoURL = "postgresql://sogo:sogo@test-postgres:5432/sogo/sogo_folder_info";
-            OCSSessionsFolderURL = "postgresql://sogo:sogo@test-postgres:5432/sogo/sogo_sessions_folder";
-
-            /* Authentication */
-            SOGoPasswordChangeEnabled = YES;
-            SOGoUserSources = (
-              {
-                type = sql;
-                id = directory;
-                viewURL = "postgresql://sogo:sogo@test-postgres:5432/sogo/sogo_view";
-                canAuthenticate = YES;
-                isAddressBook = YES;
-                userPasswordAlgorithm = md5;
-              }
-            );
-
-            /* Web Interface */
-            SOGoPageTitle = SOGo;
-            SOGoVacationEnabled = YES;
-            SOGoForwardEnabled = YES;
-            SOGoSieveScriptsEnabled = YES;
-            SOGoMailAuxiliaryUserAccountsEnabled = YES;
-            SOGoTrustProxyAuthentication = NO;
-            SOGoXSRFValidationEnabled = NO;
-
-            /* General - SOGoTimeZone *MUST* be defined */
-            SOGoLanguage = English;
-            SOGoTimeZone = America/Montreal;
-            
-            /* Debug */
-            SOGoDebugRequests = YES;
-            SoDebugBaseURL = YES;
-            ImapDebugEnabled = YES;
-            LDAPDebugEnabled = YES;
-            PGDebugEnabled = YES;
-            MySQL4DebugEnabled = YES;
-            SOGoUIxDebugEnabled = YES;
-            WODontZipResponse = YES;
-          }
-          EOF
-          )
-          
+          plist_config=$(cat sample-config.conf)
           echo "$plist_config" > /test-sogo/sogo.conf
       
       - name: Setup test PostgreSQL
@@ -139,6 +93,101 @@ jobs:
             --name sogo \
             --network test-sogo \
             -p 80:80/tcp \
+            -v /test-sogo/sogo.conf:/etc/sogo/sogo.conf
+            --stop-timeout 30 \
+            test-sogo:${{ github.run_id }}
+
+      - name: Wait for test SOGo container to start
+        run: |
+          TIMEOUT_SECONDS=180
+          START_TIME=$(date +%s)
+
+          while ! docker logs sogo 2>&1 | grep -q 'INFO success: sogo entered RUNNING state, process has stayed up for > than 1 seconds'; do
+            CURRENT_TIME=$(date +%s)
+            ELAPSED_TIME=$((CURRENT_TIME - START_TIME))
+
+            if [ $ELAPSED_TIME -gt $TIMEOUT_SECONDS ]; then
+              echo "Timeout reached. Server failed to start within $TIMEOUT_SECONDS seconds."
+              printf "\e[0;32m%s\e[0m\n" "*****Test container logs*****"
+              docker logs sogo
+              exit 1
+            fi
+
+            echo "Waiting for test SOGo container to start..."
+            sleep 5
+          done
+
+      - name: Test HTTP status code
+        run: |
+          TIMEOUT=60
+          elapsed_time=0
+          SUCCESS_CODE=302
+          
+          while true; do
+              http_status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:80/SOGo")
+          
+              if [ $http_status -eq $SUCCESS_CODE ]; then
+                  echo "Health check successful. HTTP Status Code: $http_status"
+                  exit 0
+              fi
+          
+              elapsed_time=$((elapsed_time + 1))
+          
+              if [ $elapsed_time -ge $TIMEOUT ]; then
+                  echo "Timeout reached. HTTP Health check failed."
+                  exit 1
+              fi
+          
+              # Wait for a second before next health check
+              sleep 1
+          done
+
+  end_to_end_yaml:
+    name: Tests - E2E Testing (YAML Config)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: test-sogo-${{ github.run_id }}
+          path: /tmp
+
+      - name: Load Docker image
+        env:
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          docker load --input /tmp/test-sogo-$RUN_ID.tar
+
+      - name: Setup test configurations
+        run: |
+          mkdir -p /test-sogo
+          yaml_config=$(cat sample-config.yaml)
+          echo "$yaml_config" > /test-sogo/sogo.yaml
+      
+      - name: Setup test PostgreSQL
+        run: |
+          docker network create test-sogo
+          docker run -d \
+            --name test-postgres \
+            --network test-sogo \
+            -e POSTGRES_PASSWORD=sogo \
+            -e POSTGRES_USER=sogo \
+            -e POSTGRES_DB=sogo \
+            postgres
+
+      - name: Run test SOGo container
+        run: |
+          docker run -d \
+            --name sogo \
+            --network test-sogo \
+            -p 80:80/tcp \
+            -v /test-sogo/sogo.yaml:/etc/sogo/sogo.conf.d/00-test.yaml
             --stop-timeout 30 \
             test-sogo:${{ github.run_id }}
 
