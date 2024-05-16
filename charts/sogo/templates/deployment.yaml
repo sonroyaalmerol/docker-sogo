@@ -156,12 +156,12 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if or .Values.sogo.extraInitContainers }}
+      {{- if or .Values.sogo.extraInitContainers .Values.sogo.configs.OCSFolderInfoURL .Values.mariadb.enabled .Values.postgresql.enabled }}
       initContainers:
         {{- with .Values.sogo.extraInitContainers }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- if or .Values.sogo.configs.OCSFolderInfoURL }}
+        {{- if .Values.sogo.configs.OCSFolderInfoURL }}
         {{- $parts := split "://" .Values.sogo.configs.OCSFolderInfoURL -}}
         {{- $db_type := $parts._0 -}}
         {{- $remaining := $parts._1 -}}
@@ -183,6 +183,39 @@ spec:
             - "sh"
             - "-c"
             - {{ printf "until pg_isready -h %s -U %s ; do sleep 2 ; done" $host._0 $auth._0 }}
+        {{- end }}
+        {{- else if or .Values.mariadb.enabled .Values.postgresql.enabled }}
+        {{- if .Values.mariadb.enabled }}
+        - name: mariadb-isalive
+          image: {{ .Values.mariadb.image.registry | default "docker.io" }}/{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}
+          env:
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default (printf "%s-db" .Release.Name) }}
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default (printf "%s-db" .Release.Name) }}
+          command:
+            - "sh"
+            - "-c"
+            - {{ printf "until mysql --host=%s-mariadb --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} --execute=\"SELECT 1;\"; do echo waiting for mysql; sleep 2; done;" .Release.Name }}
+        {{- else if .Values.postgresql.enabled }}
+        - name: postgresql-isready
+          image: {{ .Values.postgresql.image.registry | default "docker.io"  }}/{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default (printf "%s-db" .Release.Name) }}
+            - name: POSTGRES_HOST
+              value: {{ template "postgresql.v1.primary.fullname" .Subcharts.postgresql }}
+          command:
+            - "sh"
+            - "-c"
+            - "until pg_isready -h ${POSTGRES_HOST} -U ${POSTGRES_USER} ; do sleep 2 ; done"
+        {{- end }}
         {{- end }}
         {{- end }}{{/* end-if any database-initContainer */}}
       {{- end }}{{/* end-if any initContainer */}}
