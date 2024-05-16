@@ -32,4 +32,4 @@ helm install sogo sogo/sogo --create-namespace --namespace sogo
 
 ## Values
 
-You can find the `values.yaml` summary in [the charts directory](https://github.com/sonroyaalmerol/docker-sogo/blob/main/charts/palworld/values.yaml)
+You can find the `values.yaml` summary in [the charts directory](https://github.com/sonroyaalmerol/docker-sogo/blob/main/charts/sogo/values.yaml)
