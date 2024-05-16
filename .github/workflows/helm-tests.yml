@@ -2,15 +2,11 @@ name: Lint and Test Charts
 
 on:
   pull_request:
-    paths-ignore:
-      - 'README.md'
-      - 'CODE_OF_CONDUCT.md'
-      - 'CONTRIBUTING.md'
-      - 'LICENSE'
-      - 'sample-config.conf'
-      - 'sample-config.yaml'
-      - '.github/**'
+    paths:
       - 'charts/**'
+      - ct.yaml
+    paths-ignore:
+      - 'charts/**/README.md'
 
 jobs:
   lint-test:
