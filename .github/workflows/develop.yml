@@ -5,9 +5,13 @@ on:  # yamllint disable-line rule:truthy
     branches: [main]
     paths-ignore:
       - 'README.md'
+      - 'CODE_OF_CONDUCT.md'
+      - 'CONTRIBUTING.md'
+      - 'LICENSE'
       - 'sample-config.conf'
       - 'sample-config.yaml'
       - '.github/**'
+      - 'charts/**'
 
 jobs:
   check_versions:

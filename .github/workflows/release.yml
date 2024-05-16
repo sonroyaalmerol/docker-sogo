@@ -115,3 +115,7 @@ jobs:
           generate_release_notes: true
           body: |
             SOGo Update: https://github.com/Alinto/sogo/releases/tag/SOGo-${{ needs.check_versions.outputs.base_version }}
+  
+  release_helm:
+    needs: release
+    uses: sonroyaalmerol/docker-sogo/.github/workflows/helm-release.yml@main

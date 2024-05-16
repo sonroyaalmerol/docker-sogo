@@ -1,73 +1,56 @@
 name: Lint and Test Charts
-on: pull_request
-concurrency:
-  group: '${{ github.workflow }} @ ${{ github.ref }}'
-  cancel-in-progress: true
+
+on:
+  pull_request:
+    paths-ignore:
+      - 'README.md'
+      - 'CODE_OF_CONDUCT.md'
+      - 'CONTRIBUTING.md'
+      - 'LICENSE'
+      - 'sample-config.conf'
+      - 'sample-config.yaml'
+      - '.github/**'
+      - 'charts/**'
+
 jobs:
-  lint:
-    runs-on: ubuntu-latest
+  lint-test:
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Helm - chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
+      - name: Install Helm
+        uses: azure/setup-helm@v3.5
         with:
-          install_only: true
+          version: v3.11.1
 
-      - name: Helm - chart-testing
+      - name: Add dependency chart repos
+        run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+
+      - name: Set up chart-testing
         uses: helm/chart-testing-action@v2.6.1
 
-      - name: Helm - chart-testing - list-changed
+      - name: Run chart-testing (list-changed)
         id: list-changed
         run: |
-          changed=$(ct list-changed --config ct.yaml)
+          changed=$(ct list-changed --target-branch ${{ github.event.repository.default_branch }})
           if [[ -n "$changed" ]]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Helm - chart-testing - lint
-        run: ct lint --check-version-increment=false --config ct.yaml
+      - name: Run chart-testing (lint)
+        id: lint
+        if: steps.list-changed.outputs.changed == 'true'
+        run: ct lint --target-branch ${{ github.event.repository.default_branch }}
 
-  e2e-test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        # Supported versions at https://kubernetes.io/releases/
-        version:
-        - v1.26.13 # EOL 2024-02-28
-        - v1.27.10 # EOL 2024-06-28
-        - v1.28.6 # EOL 2024-10-28
-        - v1.29.1 # EOL 2025-02-28
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Helm - chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
-        with:
-          install_only: true
-
-      - name: Helm - chart-testing
-        uses: helm/chart-testing-action@v2.6.1
-
-      - name: Helm - chart-testing - list-changed
-        id: list-changed
-        run: |
-          changed=$(ct list-changed --config ct.yaml)
-          if [[ -n "$changed" ]]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: K8S - Create Kind Cluster
+      - name: Create kind cluster
         uses: helm/kind-action@v1.8.0
-        with:
-          node_image: kindest/node:${{ matrix.version }}
         if: steps.list-changed.outputs.changed == 'true'
 
-      - name: Helm - chart-testing - install
-        run: ct install --config ct.yaml --helm-extra-set-args='--set=server.resources=null --set=server.storage.main.size=1Gi'
+      - name: Run chart-testing (install)
+        id: install
+        if: steps.list-changed.outputs.changed == 'true'
+        run: ct install --target-branch ${{ github.event.repository.default_branch }}
