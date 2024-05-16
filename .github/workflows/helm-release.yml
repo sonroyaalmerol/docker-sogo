@@ -28,7 +28,49 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Chart AppVersion
+        env:
+          ACTION_TRIGGER: ${{github.event_name}}
+        run: |
+          CHART_PATH="charts/sogo/Chart.yaml"
+
+          # Update chart version
+
+          # Extract the current version from the file
+          CURRENT_VERSION=$(grep -Eo 'version: [0-9]+\.[0-9]+\.[0-9]+' "$CHART_PATH" | awk '{print $2}')
+
+          # If no version is found, exit with an error
+          if [ -z "$CURRENT_VERSION" ]; then
+              echo "No version found in the file!"
+              exit 0
+          fi
+
+          # Split the version into major, minor, and patch
+          IFS='.' read -r -a VERSION_PARTS <<< "$CURRENT_VERSION"
+          MAJOR=${VERSION_PARTS[0]}
+          MINOR=${VERSION_PARTS[1]}
+          PATCH=${VERSION_PARTS[2]}
+          
+          if [ "$ACTION_TRIGGER" = "workflow_dispatch" ]; then
+            # Increment the version
+            PATCH=$((PATCH + 1))
+          else
+            MINOR=$((MINOR + 1))
+          fi
+
+          # Form the new version
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+
+          # Update the file with the new version
+          sed -i 's/version: '"$CURRENT_VERSION"'/version: '"$NEW_VERSION"'/' "$CHART_PATH"
     
+      - name: Commit files and push it
+        run: |
+          git add .
+          git commit -m "chore: bump chart version"
+          git push
+
       # See https://github.com/helm/chart-releaser-action/issues/6
       - name: Set up Helm
         uses: azure/setup-helm@v3.5
