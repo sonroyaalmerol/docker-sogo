@@ -216,7 +216,6 @@ spec:
             - "-c"
             - "until pg_isready -h ${POSTGRES_HOST} -U ${POSTGRES_USER} ; do sleep 2 ; done"
         {{- end }}
-        {{- end }}
         {{- end }}{{/* end-if any database-initContainer */}}
       {{- end }}{{/* end-if any initContainer */}}
       {{- with .Values.affinity }}
