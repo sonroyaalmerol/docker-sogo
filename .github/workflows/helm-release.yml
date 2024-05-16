@@ -30,8 +30,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update Chart AppVersion
-        env:
-          ACTION_TRIGGER: ${{github.event_name}}
+        if: github.event_name == 'workflow_call'
         run: |
           CHART_PATH="charts/sogo/Chart.yaml"
 
@@ -52,12 +51,7 @@ jobs:
           MINOR=${VERSION_PARTS[1]}
           PATCH=${VERSION_PARTS[2]}
           
-          if [ "$ACTION_TRIGGER" = "workflow_dispatch" ]; then
-            # Increment the version
-            PATCH=$((PATCH + 1))
-          else
-            MINOR=$((MINOR + 1))
-          fi
+          MINOR=$((MINOR + 1))
 
           # Form the new version
           NEW_VERSION="$MAJOR.$MINOR.$PATCH"
