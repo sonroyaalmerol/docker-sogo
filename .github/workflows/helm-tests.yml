@@ -3,10 +3,10 @@ name: Lint and Test Charts
 on:
   pull_request:
     paths:
-      - 'charts/**'
+      - 'charts/**/*.tpl'
+      - 'charts/**/*.yaml'
+      - 'charts/**/.helmignore'
       - ct.yaml
-    paths-ignore:
-      - 'charts/**/README.md'
 
 jobs:
   lint-test:
