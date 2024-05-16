@@ -192,11 +192,11 @@ spec:
             - name: MYSQL_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ default (printf "%s-db" .Release.Name) }}
+                  name: {{ printf "%s-db" .Release.Name }}
             - name: MYSQL_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ default (printf "%s-db" .Release.Name) }}
+                  name: {{ printf "%s-db" .Release.Name }}
           command:
             - "sh"
             - "-c"
@@ -208,7 +208,7 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ default (printf "%s-db" .Release.Name) }}
+                  name: {{ printf "%s-db" .Release.Name }}
             - name: POSTGRES_HOST
               value: {{ template "postgresql.v1.primary.fullname" .Subcharts.postgresql }}
           command:
