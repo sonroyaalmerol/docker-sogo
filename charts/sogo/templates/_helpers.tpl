@@ -51,9 +51,9 @@ Create DB URL paths
 */}}
 {{- define "sogo.db.baseUrl" -}}
 {{- if .Values.postgresql.enabled -}}
-{{- printf "postgresql://%s:%s@%s:5432/%s" (or .Values.postgresql.global.postgresql.auth.username .Values.postgresql.auth.username) (or .Values.postgresql.global.postgresql.auth.password .Values.postgresql.auth.password) (template "postgresql.v1.primary.fullname" .Subcharts.postgresql) (or .Values.postgresql.global.postgresql.auth.database .Values.postgresql.auth.database) -}}
+{{- printf "postgresql://%s:%s@%s:5432/%s" (or .Values.postgresql.global.postgresql.auth.username .Values.postgresql.auth.username) (or .Values.postgresql.global.postgresql.auth.password .Values.postgresql.auth.password) (include "postgresql.v1.primary.fullname" .Subcharts.postgresql) (or .Values.postgresql.global.postgresql.auth.database .Values.postgresql.auth.database) -}}
 {{- else if .Values.mariadb.enabled -}}
-{{- printf "mysql://%s:%s@%s:3306/%s" .Values.mariadb.auth.username .Values.mariadb.auth.password (template "mariadb.primary.fullname" .Subcharts.mariadb) .Values.mariadb.auth.database -}}
+{{- printf "mysql://%s:%s@%s:3306/%s" .Values.mariadb.auth.username .Values.mariadb.auth.password (include "mariadb.primary.fullname" .Subcharts.mariadb) .Values.mariadb.auth.database -}}
 {{- end -}}
 {{- end -}}
 
