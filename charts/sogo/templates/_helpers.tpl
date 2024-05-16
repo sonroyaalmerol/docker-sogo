@@ -68,14 +68,6 @@ OCSAdminURL: {{ printf "%s/sogo_admin" (include "sogo.db.baseUrl" .) }}
 SOGoMemcachedHost: {{ template "common.names.fullname" .Subcharts.memcached }}
 {{- end -}}
 
-{{- $parts := split "://" (include "sogo.db.baseUrl" .) -}}
-{{- $db_type := index $parts 0 -}}
-{{- $remaining := index $parts 1 -}}
-
-{{- define "sogo.db.type" -}}
-{{- printf "%s" $db_type -}}
-{{- end -}}
-
 {{- define "sogo.ingress.apiVersion" -}}
 {{- if semverCompare "<1.14-0" .Capabilities.KubeVersion.GitVersion -}}
 {{- print "extensions/v1beta1" -}}
