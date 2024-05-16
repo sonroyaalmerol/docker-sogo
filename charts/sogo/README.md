@@ -10,7 +10,7 @@
 A helm chart for the docker-sogo docker image
 
 > [!IMPORTANT]
-> This chart is still not ready for deployment. Please use the Docker container manually for now.
+> This chart is still in its beta stage. Do not use in production.
 
 ## Usage
 
