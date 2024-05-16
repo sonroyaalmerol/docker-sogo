@@ -34,7 +34,9 @@ To make things simpler, the container will mainly follow SOGo's versioning with 
   - `${SOGo-version}-${Container-Revision}` (e.g. `5.10.0-1`)
 
 ## Why did I build this container?
-Mainly due to SOGo being used by the company I work for. As we transition to using Kubernetes for our services, we needed to containerize most of our legacy services, including SOGo. We also needed a clear way to downgrade to a specific version as much as possible which proved to be difficult to do with currently available SOGo containers being built with nightly Debian packages.
+  - Mainly due to SOGo being used by the company I work for. As we transition to using Kubernetes for our services, we needed to containerize most of our legacy services, including SOGo.
+  - We also needed a clear way to downgrade to a specific version as much as possible which proved to be difficult to do with currently available SOGo containers being built with nightly Debian packages.
+  - Using OpenStep plist format for configuration was difficult to maintain since we preferred to use multiple files for different sections of the configuration. With our database secrets in Kubernetes being dynamically generated, having one config file for database credentials separated from the rest of the configurations was essential.
 
 ## Usage
 
