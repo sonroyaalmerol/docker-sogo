@@ -34,7 +34,7 @@ ingress:
   #
   #    location = / {
   #      rewrite ^(.*)$ /SOGo;
-  #      allow all; 
+  #      allow all;
   #    }
 
   # tls:
@@ -57,7 +57,7 @@ sogo:
 
   # If web server is not binding default port, you can define it
   containerPort: 80
-  
+
   # SOGo configuration options
   # ref: https://www.sogo.nu/files/docs/SOGoInstallationGuide.html
   configs:
