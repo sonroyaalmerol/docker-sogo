@@ -20,7 +20,7 @@ Please refer to Helm's [documentation](https://helm.sh/docs/) to get started.
 Once Helm is set up properly, add the repository as follows:
 
 ```console
-helm repo add sogo https://sonroyaalmerol.github.io/docker-sogo
+helm repo add sogo https://helm.snry.xyz/docker-sogo/
 ```
 
 Running `helm search repo sogo` should now display the chart and it's versions
