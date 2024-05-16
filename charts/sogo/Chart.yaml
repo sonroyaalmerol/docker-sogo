@@ -1,0 +1,31 @@
+apiVersion: v2
+name: sogo
+version: 0.1.0
+description: A helm chart for the docker-sogo docker image
+type: application
+keywords:
+- sogo
+- alinto
+- inverse
+- mail
+home: https://github.com/sonroyaalmerol/docker-sogo
+sources:
+- https://github.com/sonroyaalmerol/docker-sogo
+maintainers:
+- name: Son Roy Almerol
+  email: sogo@snry.me
+  url: https://github.com/sonroyaalmerol
+icon: https://www.sogo.nu/img/sogo.svg
+appVersion: "5.10.0-1"
+deprecated: false
+annotations:
+  artifacthub.io/license: MIT
+  artifacthub.io/links: |
+    - name: GitHub source
+      url: https://github.com/sonroyaalmerol/docker-sogo/
+  artifacthub.io/images: |
+    - name: docker-sogo
+      image: sonroyaalmerol/docker-sogo:5.10.0-1
+  artifacthub.io/screenshots: |
+    - title: SOGo
+      url: https://www.sogo.nu/img/screenshot.png

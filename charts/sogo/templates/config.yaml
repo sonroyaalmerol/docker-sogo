@@ -1,0 +1,14 @@
+{{- if .Values.sogo.configs -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "sogo.fullname" . }}-config
+  labels:
+    app.kubernetes.io/name: {{ include "sogo.name" . }}
+    helm.sh/chart: {{ include "sogo.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  configs: |
+{{ .Values.sogo.configs | toYaml | indent 4 }}
+{{- end }}

@@ -1,0 +1,73 @@
+name: Lint and Test Charts
+on: pull_request
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.ref }}'
+  cancel-in-progress: true
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Helm - chart-releaser
+        uses: helm/chart-releaser-action@v1.6.0
+        with:
+          install_only: true
+
+      - name: Helm - chart-testing
+        uses: helm/chart-testing-action@v2.6.1
+
+      - name: Helm - chart-testing - list-changed
+        id: list-changed
+        run: |
+          changed=$(ct list-changed --config ct.yaml)
+          if [[ -n "$changed" ]]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Helm - chart-testing - lint
+        run: ct lint --check-version-increment=false --config ct.yaml
+
+  e2e-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Supported versions at https://kubernetes.io/releases/
+        version:
+        - v1.26.13 # EOL 2024-02-28
+        - v1.27.10 # EOL 2024-06-28
+        - v1.28.6 # EOL 2024-10-28
+        - v1.29.1 # EOL 2025-02-28
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Helm - chart-releaser
+        uses: helm/chart-releaser-action@v1.6.0
+        with:
+          install_only: true
+
+      - name: Helm - chart-testing
+        uses: helm/chart-testing-action@v2.6.1
+
+      - name: Helm - chart-testing - list-changed
+        id: list-changed
+        run: |
+          changed=$(ct list-changed --config ct.yaml)
+          if [[ -n "$changed" ]]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: K8S - Create Kind Cluster
+        uses: helm/kind-action@v1.8.0
+        with:
+          node_image: kindest/node:${{ matrix.version }}
+        if: steps.list-changed.outputs.changed == 'true'
+
+      - name: Helm - chart-testing - install
+        run: ct install --config ct.yaml --helm-extra-set-args='--set=server.resources=null --set=server.storage.main.size=1Gi'
