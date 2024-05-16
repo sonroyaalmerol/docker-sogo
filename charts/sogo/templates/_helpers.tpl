@@ -37,10 +37,44 @@ Create image name that is used in the deployment
 {{- if .Values.image.tag -}}
 {{- printf "%s:%s" .Values.image.repository .Values.image.tag -}}
 {{- else -}}
-{{- printf "%s:%s-%s" .Values.image.repository .Chart.AppVersion .Values.image.flavor -}}
+{{- if .Values.image.revision -}}
+{{- printf "%s:%s-%s" .Values.image.repository .Chart.AppVersion .Values.image.revision -}}
+{{- else -}}
+{{- printf "%s:%s" .Values.image.repository .Chart.AppVersion -}}
+{{- end -}}
 {{- end -}}
 {{- end -}}
 
+
+{{/*
+Create DB URL paths
+*/}}
+{{- define "sogo.db.baseUrl" -}}
+{{- if .Values.postgresql.enabled -}}
+{{- printf "postgresql://%s:%s@%s:5432/%s" (or .Values.postgresql.global.postgresql.auth.username .Values.postgresql.auth.username) (or .Values.postgresql.global.postgresql.auth.password .Values.postgresql.auth.password) (template "postgresql.v1.primary.fullname" .Subcharts.postgresql) (or .Values.postgresql.global.postgresql.auth.database .Values.postgresql.auth.database) -}}
+{{- else if .Values.mariadb.enabled -}}
+{{- printf "mysql://%s:%s@%s:3306/%s" .Values.mariadb.auth.username .Values.mariadb.auth.password (template "mariadb.primary.fullname" .Subcharts.mariadb) .Values.mariadb.auth.database -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "sogo.db.configs" -}}
+SOGoProfileURL: {{ printf "%s/sogo_user_profile" (include "sogo.db.baseUrl" .) }}
+OCSFolderInfoURL: {{ printf "%s/sogo_folder_info" (include "sogo.db.baseUrl" .) }}
+OCSSessionsFolderURL: {{ printf "%s/sogo_sessions_folder" (include "sogo.db.baseUrl" .) }}
+OCSAdminURL: {{ printf "%s/sogo_admin" (include "sogo.db.baseUrl" .) }}
+{{- end -}}
+
+{{- define "sogo.memcached.configs" -}}
+SOGoMemcachedHost: {{ template "common.names.fullname" .Subcharts.memcached }}
+{{- end -}}
+
+{{- $parts := split "://" (include "sogo.db.baseUrl" .) -}}
+{{- $db_type := index $parts 0 -}}
+{{- $remaining := index $parts 1 -}}
+
+{{- define "sogo.db.type" -}}
+{{- printf "%s" $db_type -}}
+{{- end -}}
 
 {{- define "sogo.ingress.apiVersion" -}}
 {{- if semverCompare "<1.14-0" .Capabilities.KubeVersion.GitVersion -}}

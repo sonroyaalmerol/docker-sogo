@@ -4,3 +4,5 @@ target-branch: main
 chart-dirs:
   - charts
 validate-maintainers: false
+chart-repos:
+  - bitnami=https://charts.bitnami.com/bitnami

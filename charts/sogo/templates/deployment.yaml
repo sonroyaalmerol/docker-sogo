@@ -137,6 +137,18 @@ spec:
               subPath: secrets
               readOnly: true
             {{- end }}
+            {{- if or .Values.mariadb.enabled .Values.postgresql.enabled }}
+            - name: sogo-configs
+              mountPath: /etc/sogo/sogo.conf.d/98-internal-db.yaml
+              subPath: internal-db
+              readOnly: true
+            {{- end }}
+            {{- if .Values.memcached.enabled }}
+            - name: sogo-configs
+              mountPath: /etc/sogo/sogo.conf.d/98-internal-memcached.yaml
+              subPath: internal-memcached
+              readOnly: true
+            {{- end }}
         {{- with .Values.sogo.extraSidecarContainers }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -149,6 +161,30 @@ spec:
         {{- with .Values.sogo.extraInitContainers }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
+        {{- if or .Values.sogo.configs.OCSFolderInfoURL }}
+        {{- $parts := split "://" .Values.sogo.configs.OCSFolderInfoURL -}}
+        {{- $db_type := $parts._0 -}}
+        {{- $remaining := $parts._1 -}}
+        {{- $parts = split "/" $remaining -}}
+        {{- $base_url = split "@" $parts._0 -}}
+        {{- $auth = split ":" $base_url._0 -}}
+        {{- $host = split ":" $base_url._1 -}}
+        {{- if eq $db_type "mysql" }}
+        - name: mariadb-isalive
+          image: {{ .Values.mariadb.image.registry | default "docker.io" }}/{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}
+          command:
+            - "sh"
+            - "-c"
+            - {{ printf "until mysql --host=%s --user=%s --password=%s --execute=\"SELECT 1;\"; do echo waiting for mysql; sleep 2; done;" $host._0 $auth._0 $auth._1 }}
+        {{- else if eq $db_type "postgresql" }}
+        - name: postgresql-isready
+          image: {{ .Values.postgresql.image.registry | default "docker.io"  }}/{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}
+          command:
+            - "sh"
+            - "-c"
+            - {{ printf "until pg_isready -h %s -U %s ; do sleep 2 ; done" $host._0 $auth._0 }}
+        {{- end }}
+        {{- end }}{{/* end-if any database-initContainer */}}
       {{- end }}{{/* end-if any initContainer */}}
       {{- with .Values.affinity }}
       affinity:

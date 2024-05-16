@@ -8,6 +8,7 @@ keywords:
 - alinto
 - inverse
 - mail
+- calendar
 home: https://github.com/sonroyaalmerol/docker-sogo
 sources:
 - https://github.com/sonroyaalmerol/docker-sogo
@@ -16,7 +17,7 @@ maintainers:
   email: sogo@snry.me
   url: https://github.com/sonroyaalmerol
 icon: https://www.sogo.nu/img/sogo.svg
-appVersion: "5.10.0-1"
+appVersion: "5.10.0"
 deprecated: false
 annotations:
   artifacthub.io/license: MIT
@@ -29,3 +30,16 @@ annotations:
   artifacthub.io/screenshots: |
     - title: SOGo
       url: https://www.sogo.nu/img/screenshot.png
+dependencies:
+  - name: postgresql
+    version: 12.12.*
+    repository: oci://registry-1.docker.io/bitnamicharts
+    condition: postgresql.enabled
+  - name: mariadb
+    version: 12.2.*
+    repository: oci://registry-1.docker.io/bitnamicharts
+    condition: mariadb.enabled
+  - name: memcached
+    version: 17.13.*
+    repository: oci://registry-1.docker.io/bitnamicharts
+    condition: redis.enabled
