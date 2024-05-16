@@ -27,6 +27,15 @@ This container is mainly built with Kubernetes in mind. As such, one of the main
 - **Follows the official SOGo version tagging**: Docker image tags follows the version tagging of SOGo releases starting from version `5.10.0`. Backporting to different versions will be considered.
 - **YAML Configuration Support**: Users can define SOGo configurations using YAML files, allowing for easier management and version control. The included script automatically merges and converts YAML configurations into the required OpenStep plist format, simplifying the setup process.
 
+## Supported tags
+To make things simpler, the container will mainly follow SOGo's versioning with the addition of a `revision` tag which will serve as an additional incremental versioning system for each container-specific modifications I push through a certain SOGo version. This way, features that I implement for the container can and will be backported to previous SOGo versions while having automated builds for new SOGo releases at the same time. For stability and pinning, you will want to use the tag with the container revision.
+  - `latest` (will always follow the latest container revision of the latest SOGo version)
+  - `${SOGo-version}` (e.g. `5.10.0`)
+  - `${SOGo-version}-${Container-Revision}` (e.g. `5.10.0-1`)
+
+## Why did I build this container?
+Mainly due to SOGo being used by the company I work for. As we transition to using Kubernetes for our services, we needed to containerize most of our legacy services, including SOGo. We also needed a clear way to downgrade to a specific version as much as possible which proved to be difficult to do with currently available SOGo containers being built with nightly Debian packages.
+
 ## Usage
 
 ### Running the Docker Container
