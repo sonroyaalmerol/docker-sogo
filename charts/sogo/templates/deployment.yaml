@@ -143,7 +143,7 @@ spec:
               readOnly: true
             {{- end }}
             {{- if .Values.sogo.existingSecrets }}
-            - name: {{ template "sogo.fullname" . }}-shared
+            - name: {{ template "sogo.fullname" . }}-tmp
               mountPath: /etc/sogo/sogo.conf.d/99-existing-secrets.yaml
               subPath: existing-secrets.yaml
               readOnly: true
@@ -174,12 +174,12 @@ spec:
         {{- end }}
         {{- end }}
         - name: init-secrets
-          image: busybox
+          image: alpine:3.19
           volumeMounts:
-            - name: {{ template "sogo.fullname" . }}-shared
+            - name: {{ template "sogo.fullname" . }}-tmp
               mountPath: /secrets
             {{- range .Values.sogo.existingSecrets }}
-            - name: {{ .configName | lower }}
+            - name: {{ printf "external-%s" .configName | lower }}
               mountPath: {{ printf "/existing-secrets/%s" .configName }}
               subPath: {{ .key }}
               readOnly: true
@@ -194,15 +194,14 @@ spec:
               fi
 
               output_file="/secrets/existing-secrets.yaml"
-              > "$output_file"
+              : > "$output_file"  # Initialize (truncate) the output file
 
               for file in /existing-secrets/*; do
                 filename=$(basename "$file")
-                content=$(cat "$file")
-                echo "$filename: |" >> "$output_file"
+                echo "$filename: >-" >> "$output_file"
                 while IFS= read -r line; do
                   echo "  $line" >> "$output_file"
-                done <<< "$content"
+                done < "$file"
               done
         {{- if or .Values.mariadb.enabled (eq (include "sogo.db.parsed.type" .) "mysql") }}
         - name: mariadb-isalive
@@ -264,11 +263,11 @@ spec:
             secretName: {{ template "sogo.fullname" . }}-secret
         {{- end }}
         {{- range .Values.sogo.existingSecrets }}
-        - name: {{ .configName | lower }}
+        - name: {{ printf "external-%s" .configName | lower }}
           secret:
             secretName: {{ .name }}
         {{- end }}
-        - name: {{ template "sogo.fullname" . }}-shared
+        - name: {{ template "sogo.fullname" . }}-tmp
           emptyDir: {}
         {{- with .Values.sogo.extraVolumes }}
         {{- toYaml . | nindent 8 }}
