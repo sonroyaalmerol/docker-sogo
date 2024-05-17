@@ -175,7 +175,9 @@ spec:
             - "-c"
             - |
               mkdir -p /existing-secrets
-              tmp_script=$(mktemp /tmp/generate_yaml.XXXXXX.sh)
+              tmp_script=/tmp/generate_yaml.sh
+              touch "$tmp_script"
+              
               cat << 'EOF' > "$tmp_script"
               #!/bin/sh
 
