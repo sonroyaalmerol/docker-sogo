@@ -1,0 +1,21 @@
+sogo:
+  configs:
+    SOGoPageTitle: SOGo
+    SOGoVacationEnabled: true
+    SOGoForwardEnabled: true
+    SOGoSieveScriptsEnabled: true
+    SOGoMailAuxiliaryUserAccountsEnabled: true
+    SOGoTrustProxyAuthentication: false
+    SOGoXSRFValidationEnabled: false
+    SOGoLanguage: English
+    SOGoTimeZone: America/Montreal
+mariadb:
+  enabled: false
+  auth:
+    database: sogo
+    username: sogo
+    password: changeme
+  architecture: standalone
+  primary:
+    persistence:
+      enabled: false
