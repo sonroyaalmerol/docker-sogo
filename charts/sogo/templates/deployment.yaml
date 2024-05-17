@@ -178,10 +178,9 @@ spec:
           volumeMounts:
             - name: {{ template "sogo.fullname" . }}-tmp
               mountPath: /secrets
-            {{- range .Values.sogo.existingSecrets }}
-            - name: {{ printf "external-%s" .configName | lower }}
-              mountPath: {{ printf "/existing-secrets/%s" .configName }}
-              subPath: {{ .key }}
+            {{- if .Values.sogo.existingSecrets }}
+            - name: existing-secrets
+              mountPath: /existing-secrets
               readOnly: true
             {{- end }}
           command:
@@ -247,10 +246,10 @@ spec:
           secret:
             secretName: {{ template "sogo.fullname" . }}-secret
         {{- end }}
-        {{- range .Values.sogo.existingSecrets }}
-        - name: {{ printf "external-%s" .configName | lower }}
+        {{- if .Values.sogo.existingSecrets }}
+        - name: existing-secrets
           secret:
-            secretName: {{ .name }}
+            secretName: {{ .Values.sogo.existingSecrets }}
         {{- end }}
         - name: {{ template "sogo.fullname" . }}-tmp
           emptyDir: {}

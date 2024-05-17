@@ -81,10 +81,8 @@ sogo:
     # OCSStoreURL: "mysql://sogo:pass@db:3306/sogo/sogo_store"
     # OCSAclURL: "mysql://sogo:pass@db:3306/sogo/sogo_acl"
 
+  # Name of Secret containing the configurations
   existingSecrets:
-    # - configName: SOGoProfileURL
-    #   name:
-    #   key:
 
   ## Strategy used to replace old pods
   ## IMPORTANT: use with care, it is suggested to leave as that for upgrade purposes
