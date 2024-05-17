@@ -66,19 +66,19 @@ OCSAdminURL: {{ printf "%s/sogo_admin" (include "sogo.db.baseUrl" .) }}
 
 
 {{- if .Values.sogo.configs.OCSFolderInfoURL }}
-
 {{- $parts := split "://" .Values.sogo.configs.OCSFolderInfoURL -}}
-
-{{- define "sogo.db.parsed.type" -}}
 {{- $db_type := $parts._0 -}}
-{{- printf "%s" $db_type -}}
-{{- end -}}
-
 {{- $remaining := $parts._1 -}}
 {{- $parts = split "/" $remaining -}}
 {{- $base_url = split "@" $parts._0 -}}
-
 {{- $host = split ":" $base_url._1 -}}
+{{- $auth = split ":" $base_url._0 -}}
+{{- end -}}
+
+{{- define "sogo.db.parsed.type" -}}
+{{- printf "%s" $db_type -}}
+{{- end -}}
+
 {{- define "sogo.db.parsed.hostname" -}}
 {{- printf "%s" $host._0 -}}
 {{- end -}}
@@ -87,15 +87,12 @@ OCSAdminURL: {{ printf "%s/sogo_admin" (include "sogo.db.baseUrl" .) }}
 {{- printf "%s" $host._1 -}}
 {{- end -}}
 
-{{- $auth = split ":" $base_url._0 -}}
 {{- define "sogo.db.parsed.username" -}}
 {{- printf "%s" $auth._0 -}}
 {{- end -}}
 
 {{- define "sogo.db.parsed.password" -}}
 {{- printf "%s" $auth._1 -}}
-{{- end -}}
-
 {{- end -}}
 
 {{- define "sogo.memcached.configs" -}}
