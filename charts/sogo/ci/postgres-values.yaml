@@ -9,6 +9,7 @@ sogo:
     SOGoXSRFValidationEnabled: false
     SOGoLanguage: English
     SOGoTimeZone: America/Montreal
+    WOWorkersCount: 5
 postgresql:
   enabled: true
   global:

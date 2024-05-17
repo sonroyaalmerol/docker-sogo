@@ -61,6 +61,7 @@ sogo:
   # SOGo configuration options
   # ref: https://www.sogo.nu/files/docs/SOGoInstallationGuide.html
   configs:
+    WOWorkersCount: 5
     SOGoPageTitle: SOGo
     SOGoVacationEnabled: true
     SOGoForwardEnabled: true

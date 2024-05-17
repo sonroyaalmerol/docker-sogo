@@ -9,8 +9,9 @@ sogo:
     SOGoXSRFValidationEnabled: false
     SOGoLanguage: English
     SOGoTimeZone: America/Montreal
+    WOWorkersCount: 5
 mariadb:
-  enabled: false
+  enabled: true
   auth:
     database: sogo
     username: sogo
