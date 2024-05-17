@@ -5,6 +5,8 @@
 [![Image Size](https://img.shields.io/docker/image-size/sonroyaalmerol/docker-sogo/latest)](https://hub.docker.com/r/sonroyaalmerol/docker-sogo/tags)
 [![Development](https://github.com/sonroyaalmerol/docker-sogo/actions/workflows/develop.yml/badge.svg)](https://github.com/sonroyaalmerol/docker-sogo/actions/workflows/develop.yml)
 [![Release](https://github.com/sonroyaalmerol/docker-sogo/actions/workflows/release.yml/badge.svg)](https://github.com/sonroyaalmerol/docker-sogo/actions/workflows/release.yml)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/sogo&style=flat-square)](https://artifacthub.io/packages/search?repo=sogo)
+[![OCI security profiles](https://img.shields.io/badge/oci%3A%2F%2F-sogo-blue?logo=kubernetes&logoColor=white&style=flat-square)](https://github.com/sonroyaalmerol/docker-sogo/packages)
 
 ## What is SOGo?
 
@@ -51,6 +53,30 @@ docker run -v /path/to/sogo/configs:/etc/sogo/sogo.conf.d/ sonroyaalmerol/docker
 Replace `/path/to/sogo/configs` with the directory containing your YAML configuration files.
 
 The NGINX process inside the container will host the web server on port 80 by default. See the [default NGINX config](https://github.com/sonroyaalmerol/docker-sogo/blob/main/default-configs/nginx.conf) for more info.
+
+### Running in Kubernetes with Helm
+> [!IMPORTANT]
+> This chart is still in its beta stage. Do not use in production.
+
+[Helm](https://helm.sh) must be installed to use the charts.
+Please refer to Helm's [documentation](https://helm.sh/docs/) to get started.
+
+Once Helm is set up properly, add the repository as follows:
+
+```console
+helm repo add sogo https://helm.snry.xyz/docker-sogo/
+```
+
+Running `helm search repo sogo` should now display the chart and it's versions
+
+To install the helm chart, use
+```console
+helm install sogo sogo/sogo --create-namespace --namespace sogo
+```
+
+#### Values
+
+You can find the `values.yaml` summary in [the charts directory](https://github.com/sonroyaalmerol/docker-sogo/blob/main/charts/sogo/values.yaml). The SOGo configurations in YAML can be placed in the `values.yaml` file in `.sogo.configs` as set in the default values. See how to convert your current SOGo configs to YAML with examples below.
 
 ### Configuration Examples
 
