@@ -137,6 +137,12 @@ spec:
               subPath: secrets
               readOnly: true
             {{- end }}
+            {{- if .Values.sogo.existingSecrets }}
+            - name: {{ template "sogo.fullname" . }}-sidecar
+              mountPath: /etc/sogo/sogo.conf.d/99-existing-secrets.yaml
+              subPath: existing-secrets.yaml
+              readOnly: true
+            {{- end }}
             {{- if or .Values.mariadb.enabled .Values.postgresql.enabled }}
             - name: sogo-configs
               mountPath: /etc/sogo/sogo.conf.d/98-internal-db.yaml
@@ -160,6 +166,53 @@ spec:
       initContainers:
         {{- with .Values.sogo.extraInitContainers }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.sogo.existingSecrets }}
+        - name: existing-secrets-importer
+          image: busybox
+          restartPolicy: Always
+          volumeMounts:
+            - name: {{ template "sogo.fullname" . }}-sidecar
+              mountPath: /secrets
+            {{- range .Values.sogo.existingSecrets }}
+            - name: {{ .configName }}
+              mountPath: {{ printf "/existing-secrets/%s" .configName }}
+              subPath: {{ .key }}
+              readOnly: true
+            {{- end }}
+          command:
+            - "sh"
+            - "-c"
+            - |
+              mkdir -p /existing-secrets
+              tmp_script=$(mktemp /tmp/generate_yaml.XXXXXX.sh)
+              cat << 'EOF' > "$tmp_script"
+              #!/bin/sh
+
+              output_file="/secrets/existing-secrets.yaml"
+              > "$output_file"
+
+              # Loop through each file in the directory
+              for file in /existing-secrets/*; do
+                # Get the filename without the directory path
+                filename=$(basename "$file")
+                # Read the content of the file
+                content=$(cat "$file")
+                # Append the filename and content to the YAML file
+                echo "$filename: |" >> "$output_file"
+                while IFS= read -r line; do
+                  echo "  $line" >> "$output_file"
+                done <<< "$content"
+              done
+              EOF
+
+              chmod +x "$tmp_script"
+
+              # Initial generation of file
+              sh "$tmp_script"
+
+              # Run inotifyd to watch for changes and regenerate the YAML file
+              inotifyd "$tmp_script" /existing-secrets:cwm
         {{- end }}
         {{- if or .Values.mariadb.enabled (eq (include "sogo.db.parsed.type" .) "mysql") }}
         - name: mariadb-isalive
@@ -220,6 +273,15 @@ spec:
         - name: sogo-secrets
           secret:
             secretName: {{ template "sogo.fullname" . }}-secret
+        {{- end }}
+        {{- range .Values.sogo.existingSecrets }}
+        - name: {{ .configName }}
+          secret:
+            secretName: {{ .name }}
+        {{- end }}
+        {{- if .Values.sogo.existingSecrets }}
+        - name: {{ template "sogo.fullname" . }}-sidecar
+          emptyDir: {}
         {{- end }}
         {{- with .Values.sogo.extraVolumes }}
         {{- toYaml . | nindent 8 }}

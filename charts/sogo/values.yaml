@@ -71,6 +71,20 @@ sogo:
     SOGoLanguage: English
     SOGoTimeZone: America/Montreal
 
+  # Follows the same format as .sogo.config but will be kept as a Secret
+  secrets: {}
+    # SOGoProfileURL: "mysql://sogo:pass@db:3306/sogo/sogo_user_profile"
+    # OCSFolderInfoURL: "mysql://sogo:pass@db:3306/sogo/sogo_folder_info"
+    # OCSSessionsFolderURL: "mysql://sogo:pass@db:3306/sogo/sogo_sessions_folder"
+    # OCSCacheFolderURL: "mysql://sogo:pass@db:3306/sogo/sogo_cache_folder"
+    # OCSStoreURL: "mysql://sogo:pass@db:3306/sogo/sogo_store"
+    # OCSAclURL: "mysql://sogo:pass@db:3306/sogo/sogo_acl"
+
+  existingSecrets:
+    # - configName: SOGoProfileURL
+    #   name: 
+    #   key: 
+
   ## Strategy used to replace old pods
   ## IMPORTANT: use with care, it is suggested to leave as that for upgrade purposes
   ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
