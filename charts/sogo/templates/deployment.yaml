@@ -161,31 +161,7 @@ spec:
         {{- with .Values.sogo.extraInitContainers }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- if .Values.sogo.configs.OCSFolderInfoURL }}
-        {{- $parts := split "://" .Values.sogo.configs.OCSFolderInfoURL -}}
-        {{- $db_type := $parts._0 -}}
-        {{- $remaining := $parts._1 -}}
-        {{- $parts = split "/" $remaining -}}
-        {{- $base_url = split "@" $parts._0 -}}
-        {{- $auth = split ":" $base_url._0 -}}
-        {{- $host = split ":" $base_url._1 -}}
-        {{- if eq $db_type "mysql" }}
-        - name: mariadb-isalive
-          image: {{ .Values.mariadb.image.registry | default "docker.io" }}/{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}
-          command:
-            - "sh"
-            - "-c"
-            - {{ printf "until mysql --host=%s --user=%s --password=%s --execute=\"SELECT 1;\"; do echo waiting for mysql; sleep 2; done;" $host._0 $auth._0 $auth._1 }}
-        {{- else if eq $db_type "postgresql" }}
-        - name: postgresql-isready
-          image: {{ .Values.postgresql.image.registry | default "docker.io"  }}/{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}
-          command:
-            - "sh"
-            - "-c"
-            - {{ printf "until pg_isready -h %s -U %s ; do sleep 2 ; done" $host._0 $auth._0 }}
-        {{- end }}
-        {{- else if or .Values.mariadb.enabled .Values.postgresql.enabled }}
-        {{- if .Values.mariadb.enabled }}
+        {{- if or .Values.mariadb.enabled (eq (include "sogo.db.parsed.type" .) "mysql") }}
         - name: mariadb-isalive
           image: {{ .Values.mariadb.image.registry | default "docker.io" }}/{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}
           env:
@@ -197,11 +173,15 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ printf "%s-db" .Release.Name }}
+            - name: MYSQL_HOST
+              value: {{ include "sogo.db.parsed.hostname" . | default (printf "%s-mariadb" .Release.Name) }}
+            - name: MYSQL_PORT
+              value: {{ include "sogo.db.parsed.port" . | default "3306" }}
           command:
             - "sh"
             - "-c"
-            - {{ printf "until mysql --host=%s-mariadb --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} --execute=\"SELECT 1;\"; do echo waiting for mysql; sleep 2; done;" .Release.Name }}
-        {{- else if .Values.postgresql.enabled }}
+            - "until mysql --host=${MYSQL_HOST} --port=${MYSQL_PORT} --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} --execute=\"SELECT 1;\"; do echo waiting for mysql; sleep 2; done;"
+        {{- else if or .Values.postgresql.enabled (eq (include "sogo.db.parsed.type" .) "postgresql") }}
         - name: postgresql-isready
           image: {{ .Values.postgresql.image.registry | default "docker.io"  }}/{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}
           env:
@@ -210,12 +190,13 @@ spec:
                 secretKeyRef:
                   name: {{ printf "%s-db" .Release.Name }}
             - name: POSTGRES_HOST
-              value: {{ template "postgresql.v1.primary.fullname" .Subcharts.postgresql }}
+              value: {{ include "sogo.db.parsed.hostname" . | default (template "postgresql.v1.primary.fullname" .Subcharts.postgresql) }}
+            - name: POSTGRES_PORT
+              value: {{ include "sogo.db.parsed.port" . | default "5432" }}
           command:
             - "sh"
             - "-c"
-            - "until pg_isready -h ${POSTGRES_HOST} -U ${POSTGRES_USER} ; do sleep 2 ; done"
-        {{- end }}
+            - "until pg_isready -h ${POSTGRES_HOST} -p ${POSTGRES_PORT} -U ${POSTGRES_USER} ; do sleep 2 ; done"
         {{- end }}{{/* end-if any database-initContainer */}}
       {{- end }}{{/* end-if any initContainer */}}
       {{- with .Values.affinity }}
