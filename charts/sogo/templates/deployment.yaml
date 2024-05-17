@@ -169,10 +169,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ printf "%s-db" .Release.Name }}
+                  key: db-username
             - name: MYSQL_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ printf "%s-db" .Release.Name }}
+                  key: db-password
             - name: MYSQL_HOST
               value: {{ include "sogo.db.parsed.hostname" . | default (printf "%s-mariadb" .Release.Name) }}
             - name: MYSQL_PORT
@@ -189,6 +191,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ printf "%s-db" .Release.Name }}
+                  key: db-username
             - name: POSTGRES_HOST
               value: {{ include "sogo.db.parsed.hostname" . | default (include "postgresql.v1.primary.fullname" .Subcharts.postgresql) }}
             - name: POSTGRES_PORT
