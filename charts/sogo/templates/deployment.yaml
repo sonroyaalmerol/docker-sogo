@@ -190,7 +190,7 @@ spec:
                 secretKeyRef:
                   name: {{ printf "%s-db" .Release.Name }}
             - name: POSTGRES_HOST
-              value: {{ include "sogo.db.parsed.hostname" . | default (template "postgresql.v1.primary.fullname" .Subcharts.postgresql) }}
+              value: {{ include "sogo.db.parsed.hostname" . | default (include "postgresql.v1.primary.fullname" .Subcharts.postgresql) }}
             - name: POSTGRES_PORT
               value: {{ include "sogo.db.parsed.port" . | default "5432" }}
           command:
