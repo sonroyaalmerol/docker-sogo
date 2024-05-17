@@ -195,7 +195,7 @@ startupProbe:
 ##
 postgresql:
   ## Only enable this if you don't have an external database
-  enabled: true
+  enabled: false
   global:
     postgresql:
       # global.postgresql.auth overrides postgresql.auth
