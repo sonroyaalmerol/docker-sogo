@@ -82,8 +82,8 @@ sogo:
 
   existingSecrets:
     # - configName: SOGoProfileURL
-    #   name: 
-    #   key: 
+    #   name:
+    #   key:
 
   ## Strategy used to replace old pods
   ## IMPORTANT: use with care, it is suggested to leave as that for upgrade purposes
@@ -195,6 +195,7 @@ startupProbe:
 ##
 postgresql:
   ## Only enable this if you don't have an external database
+  ## When enabled, all database URLs will default to using this database
   enabled: false
   global:
     postgresql:
@@ -226,6 +227,7 @@ postgresql:
 ##
 mariadb:
   ## Only enable this if you don't have an external database
+  ## When enabled, all database URLs will default to using this database
   enabled: false
 
   auth:

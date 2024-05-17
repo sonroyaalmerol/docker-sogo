@@ -62,6 +62,17 @@ SOGoProfileURL: {{ printf "%s/sogo_user_profile" (include "sogo.db.baseUrl" .) }
 OCSFolderInfoURL: {{ printf "%s/sogo_folder_info" (include "sogo.db.baseUrl" .) }}
 OCSSessionsFolderURL: {{ printf "%s/sogo_sessions_folder" (include "sogo.db.baseUrl" .) }}
 OCSAdminURL: {{ printf "%s/sogo_admin" (include "sogo.db.baseUrl" .) }}
+OCSStoreURL: {{ printf "%s/sogo_store" (include "sogo.db.baseUrl" .) }}
+OCSAclURL: {{ printf "%s/sogo_acl" (include "sogo.db.baseUrl" .) }}
+OCSCacheFolderURL: {{ printf "%s/sogo_cache_folder" (include "sogo.db.baseUrl" .) }}
+OCSEMailAlarmsFolderURL: {{ printf "%s/sogo_alarms_folder" (include "sogo.db.baseUrl" .) }}
+SOGoUserSources:
+  - type: sql
+    id: directory
+    viewURL: {{ printf "%s/sogo_view" (include "sogo.db.baseUrl" .) }}
+    canAuthenticate: true
+    isAddressBook: true
+    userPasswordAlgorithm: md5
 {{- end -}}
 
 {{- define "sogo.db.parsed.type" -}}
