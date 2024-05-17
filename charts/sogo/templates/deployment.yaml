@@ -34,6 +34,11 @@ spec:
         {{- if .Values.memcached.enabled }}
         {{ template "sogo.memcached.fullname" . }}-client: "true"
         {{- end }}
+        {{- if .Values.mariadb.enabled }}
+        {{ template "sogo.memcached.fullname" . }}-client: "true"
+        {{- else if .Values.postgresql.enabled }}
+        {{ template "sogo.memcached.fullname" . }}-client: "true"
+        {{- end }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -138,7 +143,7 @@ spec:
               readOnly: true
             {{- end }}
             {{- if .Values.sogo.existingSecrets }}
-            - name: {{ template "sogo.fullname" . }}-sidecar
+            - name: {{ template "sogo.fullname" . }}-tmp
               mountPath: /etc/sogo/sogo.conf.d/99-existing-secrets.yaml
               subPath: existing-secrets.yaml
               readOnly: true
@@ -162,22 +167,21 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if or .Values.sogo.extraInitContainers .Values.sogo.configs.OCSFolderInfoURL .Values.mariadb.enabled .Values.postgresql.enabled }}
       initContainers:
+        {{- if .Values.sogo.extraInitContainers }}
         {{- with .Values.sogo.extraInitContainers }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- if .Values.sogo.existingSecrets }}
-        - name: existing-secrets-importer
-          image: busybox
+        {{- end }}
+        - name: {{ .Chart.Name }}-ext-secrets
+          image: alpine:3.19
           restartPolicy: Always
           volumeMounts:
-            - name: {{ template "sogo.fullname" . }}-sidecar
+            - name: {{ template "sogo.fullname" . }}-tmp
               mountPath: /secrets
-            {{- range .Values.sogo.existingSecrets }}
-            - name: {{ .configName }}
-              mountPath: {{ printf "/existing-secrets/%s" .configName }}
-              subPath: {{ .key }}
+            {{- if .Values.sogo.existingSecrets }}
+            - name: existing-secrets
+              mountPath: /existing-secrets
               readOnly: true
             {{- end }}
           command:
@@ -185,7 +189,9 @@ spec:
             - "-c"
             - |
               mkdir -p /existing-secrets
-              tmp_script=$(mktemp /tmp/generate_yaml.XXXXXX.sh)
+              tmp_script=/tmp/generate_yaml.sh
+              touch "$tmp_script"
+              
               cat << 'EOF' > "$tmp_script"
               #!/bin/sh
 
@@ -199,10 +205,9 @@ spec:
                 # Read the content of the file
                 content=$(cat "$file")
                 # Append the filename and content to the YAML file
-                echo "$filename: |" >> "$output_file"
-                while IFS= read -r line; do
-                  echo "  $line" >> "$output_file"
-                done <<< "$content"
+                if [ -n "$content" ]; then
+                  echo "$filename: $content" >> "$output_file"
+                fi
               done
               EOF
 
@@ -211,9 +216,10 @@ spec:
               # Initial generation of file
               sh "$tmp_script"
 
+              echo "Watching existing secrets..."
+
               # Run inotifyd to watch for changes and regenerate the YAML file
               inotifyd "$tmp_script" /existing-secrets:cwm
-        {{- end }}
         {{- if or .Values.mariadb.enabled (eq (include "sogo.db.parsed.type" .) "mysql") }}
         - name: mariadb-isalive
           image: {{ .Values.mariadb.image.registry | default "docker.io" }}/{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}
@@ -254,7 +260,6 @@ spec:
             - "-c"
             - "until pg_isready -h ${POSTGRES_HOST} -p ${POSTGRES_PORT} -U ${POSTGRES_USER} ; do sleep 2 ; done"
         {{- end }}{{/* end-if any database-initContainer */}}
-      {{- end }}{{/* end-if any initContainer */}}
       {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
@@ -274,15 +279,13 @@ spec:
           secret:
             secretName: {{ template "sogo.fullname" . }}-secret
         {{- end }}
-        {{- range .Values.sogo.existingSecrets }}
-        - name: {{ .configName }}
-          secret:
-            secretName: {{ .name }}
-        {{- end }}
         {{- if .Values.sogo.existingSecrets }}
-        - name: {{ template "sogo.fullname" . }}-sidecar
-          emptyDir: {}
+        - name: existing-secrets
+          secret:
+            secretName: {{ .Values.sogo.existingSecrets }}
         {{- end }}
+        - name: {{ template "sogo.fullname" . }}-tmp
+          emptyDir: {}
         {{- with .Values.sogo.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

@@ -61,6 +61,7 @@ sogo:
   # SOGo configuration options
   # ref: https://www.sogo.nu/files/docs/SOGoInstallationGuide.html
   configs:
+    WOWorkersCount: 5
     SOGoPageTitle: SOGo
     SOGoVacationEnabled: true
     SOGoForwardEnabled: true
@@ -80,10 +81,8 @@ sogo:
     # OCSStoreURL: "mysql://sogo:pass@db:3306/sogo/sogo_store"
     # OCSAclURL: "mysql://sogo:pass@db:3306/sogo/sogo_acl"
 
+  # Name of Secret containing the configurations
   existingSecrets:
-    # - configName: SOGoProfileURL
-    #   name: 
-    #   key: 
 
   ## Strategy used to replace old pods
   ## IMPORTANT: use with care, it is suggested to leave as that for upgrade purposes
@@ -195,7 +194,8 @@ startupProbe:
 ##
 postgresql:
   ## Only enable this if you don't have an external database
-  enabled: true
+  ## When enabled, all database URLs will default to using this database
+  enabled: false
   global:
     postgresql:
       # global.postgresql.auth overrides postgresql.auth
@@ -226,6 +226,7 @@ postgresql:
 ##
 mariadb:
   ## Only enable this if you don't have an external database
+  ## When enabled, all database URLs will default to using this database
   enabled: false
 
   auth:
@@ -256,7 +257,7 @@ mariadb:
 ##
 memcached:
   ## Only enable this if you don't have an external database
-  enabled: false
+  enabled: true
 
 
 ## Enable pod autoscaling using HorizontalPodAutoscaler
