@@ -173,8 +173,9 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
         {{- end }}
-        - name: init-secrets
+        - name: secrets-watcher
           image: alpine:3.19
+          restartPolicy: Always
           volumeMounts:
             - name: {{ template "sogo.fullname" . }}-tmp
               mountPath: /secrets
@@ -186,7 +187,38 @@ spec:
           command:
             - "sh"
             - "-c"
-            - '[ ! -d /existing-secrets ] && echo "No existing secrets found!" && exit 0; of="/secrets/existing-secrets.yaml"; : > "$of"; for f in /existing-secrets/*; do bn=$(basename "$f"); c=$(<"$f"); [ -n "$c" ] && echo "$bn: $c" >> "$of"; done; cat "$of";'
+            - |
+              mkdir -p /existing-secrets
+              tmp_script=$(mktemp /tmp/generate_yaml.XXXXXX.sh)
+              cat << 'EOF' > "$tmp_script"
+              #!/bin/sh
+
+              output_file="/secrets/existing-secrets.yaml"
+              > "$output_file"
+
+              # Loop through each file in the directory
+              for file in /existing-secrets/*; do
+                # Get the filename without the directory path
+                filename=$(basename "$file")
+                # Read the content of the file
+                content=$(cat "$file")
+                # Append the filename and content to the YAML file
+                if [ -n "$content" ]; then
+                  echo -n "$filename: $content" >> "$output_file"
+                fi
+              done
+              EOF
+
+              chmod +x "$tmp_script"
+
+              # Initial generation of file
+              sh "$tmp_script"
+
+              echo "Watching existing secrets..."
+
+              # Run inotifyd to watch for changes and regenerate the YAML file
+              inotifyd "$tmp_script" /existing-secrets:cwm
+
         {{- if or .Values.mariadb.enabled (eq (include "sogo.db.parsed.type" .) "mysql") }}
         - name: mariadb-isalive
           image: {{ .Values.mariadb.image.registry | default "docker.io" }}/{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}
