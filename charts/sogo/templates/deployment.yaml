@@ -269,10 +269,8 @@ spec:
           secret:
             secretName: {{ .name }}
         {{- end }}
-        {{- if .Values.sogo.existingSecrets }}
         - name: {{ template "sogo.fullname" . }}-shared
           emptyDir: {}
-        {{- end }}
         {{- with .Values.sogo.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
