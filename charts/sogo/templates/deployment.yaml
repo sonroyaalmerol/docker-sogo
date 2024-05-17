@@ -176,7 +176,7 @@ spec:
             - name: MYSQL_HOST
               value: {{ include "sogo.db.parsed.hostname" . | default (printf "%s-mariadb" .Release.Name) }}
             - name: MYSQL_PORT
-              value: {{ include "sogo.db.parsed.port" . | default "3306" }}
+              value: {{ include "sogo.db.parsed.port" . | default "3306" | quote }}
           command:
             - "sh"
             - "-c"
@@ -192,7 +192,7 @@ spec:
             - name: POSTGRES_HOST
               value: {{ include "sogo.db.parsed.hostname" . | default (include "postgresql.v1.primary.fullname" .Subcharts.postgresql) }}
             - name: POSTGRES_PORT
-              value: {{ include "sogo.db.parsed.port" . | default "5432" }}
+              value: {{ include "sogo.db.parsed.port" . | default "5432" | quote }}
           command:
             - "sh"
             - "-c"
