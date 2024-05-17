@@ -187,7 +187,7 @@ spec:
           command:
             - "sh"
             - "-c"
-            - '[ ! -d /existing-secrets ] && echo "No existing secrets found! Skipping initialization..." && exit 0; of="/secrets/existing-secrets.yaml"; : > "$of"; for f in /existing-secrets/*; do bn=$(basename "$f"); echo "$bn: \"$(<"$f")\"" >> "$of"; done; cat "$of";'
+            - '[ ! -d /existing-secrets ] && echo "No existing secrets found!" && exit 0; of="/secrets/existing-secrets.yaml"; : > "$of"; for f in /existing-secrets/*; do bn=$(basename "$f"); c=$(<"$f"); [ -n "$c" ] && echo "$bn: $c" >> "$of"; done; cat "$of";'
         {{- if or .Values.mariadb.enabled (eq (include "sogo.db.parsed.type" .) "mysql") }}
         - name: mariadb-isalive
           image: {{ .Values.mariadb.image.registry | default "docker.io" }}/{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}
