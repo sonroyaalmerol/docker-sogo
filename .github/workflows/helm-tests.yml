@@ -49,4 +49,4 @@ jobs:
       - name: Run chart-testing (install)
         id: install
         if: steps.list-changed.outputs.changed == 'true'
-        run: ct install --target-branch ${{ github.event.repository.default_branch }} --config ct.yaml --values
+        run: ct install --target-branch ${{ github.event.repository.default_branch }} --config ct.yaml
