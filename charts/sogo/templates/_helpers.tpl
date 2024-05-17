@@ -64,6 +64,62 @@ OCSSessionsFolderURL: {{ printf "%s/sogo_sessions_folder" (include "sogo.db.base
 OCSAdminURL: {{ printf "%s/sogo_admin" (include "sogo.db.baseUrl" .) }}
 {{- end -}}
 
+{{- define "sogo.db.parsed.type" -}}
+{{- if .Values.sogo.configs.OCSFolderInfoURL }}
+{{- $parts := split "://" .Values.sogo.configs.OCSFolderInfoURL -}}
+{{- $db_type := $parts._0 -}}
+{{- printf "%s" $db_type -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "sogo.db.parsed.hostname" -}}
+{{- if .Values.sogo.configs.OCSFolderInfoURL }}
+{{- $parts := split "://" .Values.sogo.configs.OCSFolderInfoURL -}}
+{{- $db_type := $parts._0 -}}
+{{- $remaining := $parts._1 -}}
+{{- $parts = split "/" $remaining -}}
+{{- $base_url = split "@" $parts._0 -}}
+{{- $host = split ":" $base_url._1 -}}
+{{- printf "%s" $host._0 -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "sogo.db.parsed.port" -}}
+{{- if .Values.sogo.configs.OCSFolderInfoURL }}
+{{- $parts := split "://" .Values.sogo.configs.OCSFolderInfoURL -}}
+{{- $db_type := $parts._0 -}}
+{{- $remaining := $parts._1 -}}
+{{- $parts = split "/" $remaining -}}
+{{- $base_url = split "@" $parts._0 -}}
+{{- $host = split ":" $base_url._1 -}}
+{{- printf "%s" $host._1 -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "sogo.db.parsed.username" -}}
+{{- if .Values.sogo.configs.OCSFolderInfoURL }}
+{{- $parts := split "://" .Values.sogo.configs.OCSFolderInfoURL -}}
+{{- $db_type := $parts._0 -}}
+{{- $remaining := $parts._1 -}}
+{{- $parts = split "/" $remaining -}}
+{{- $base_url = split "@" $parts._0 -}}
+{{- $auth = split ":" $base_url._0 -}}
+{{- printf "%s" $auth._0 -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "sogo.db.parsed.password" -}}
+{{- if .Values.sogo.configs.OCSFolderInfoURL }}
+{{- $parts := split "://" .Values.sogo.configs.OCSFolderInfoURL -}}
+{{- $db_type := $parts._0 -}}
+{{- $remaining := $parts._1 -}}
+{{- $parts = split "/" $remaining -}}
+{{- $base_url = split "@" $parts._0 -}}
+{{- $auth = split ":" $base_url._0 -}}
+{{- printf "%s" $auth._1 -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "sogo.memcached.configs" -}}
 SOGoMemcachedHost: {{ template "common.names.fullname" .Subcharts.memcached }}
 {{- end -}}

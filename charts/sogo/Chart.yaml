@@ -1,6 +1,6 @@
 apiVersion: v2
 name: sogo
-version: 0.1.0
+version: 0.1.1
 description: A helm chart for the docker-sogo docker image
 type: application
 keywords:
@@ -32,11 +32,11 @@ annotations:
       url: https://www.sogo.nu/img/screenshot.png
 dependencies:
   - name: postgresql
-    version: 12.12.*
+    version: 15.3.*
     repository: oci://registry-1.docker.io/bitnamicharts
     condition: postgresql.enabled
   - name: mariadb
-    version: 12.2.*
+    version: 18.0.*
     repository: oci://registry-1.docker.io/bitnamicharts
     condition: mariadb.enabled
   - name: memcached
