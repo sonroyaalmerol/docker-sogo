@@ -60,6 +60,7 @@ jobs:
           sed -i 's/version: '"$CURRENT_VERSION"'/version: '"$NEW_VERSION"'/' "$CHART_PATH"
     
       - name: Commit files and push it
+        if: github.event_name == 'workflow_call'
         run: |
           git add .
           git commit -m "chore: bump chart version"
