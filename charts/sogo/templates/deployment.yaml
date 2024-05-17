@@ -206,7 +206,7 @@ spec:
                 content=$(cat "$file")
                 # Append the filename and content to the YAML file
                 if [ -n "$content" ]; then
-                  echo -n "$filename: $content" >> "$output_file"
+                  echo "$filename: $content" >> "$output_file"
                 fi
               done
               EOF
