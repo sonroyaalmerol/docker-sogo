@@ -172,12 +172,10 @@ spec:
         {{- with .Values.sogo.extraInitContainers }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- if .Values.sogo.existingSecrets }}
-        - name: existing-secrets-importer
+        - name: init-secrets
           image: busybox
-          restartPolicy: Always
           volumeMounts:
-            - name: {{ template "sogo.fullname" . }}-sidecar
+            - name: {{ template "sogo.fullname" . }}-shared
               mountPath: /secrets
             {{- range .Values.sogo.existingSecrets }}
             - name: {{ .configName | lower }}
@@ -189,36 +187,23 @@ spec:
             - "sh"
             - "-c"
             - |
-              mkdir -p /existing-secrets
-              tmp_script=$(mktemp /tmp/generate_yaml.XXXXXX.sh)
-              cat << 'EOF' > "$tmp_script"
-              #!/bin/sh
+              if [ ! -d /existing-secrets ]; then
+                echo "No existing secrets found! Skipping initialization..."
+                exit 0
+              fi
 
               output_file="/secrets/existing-secrets.yaml"
               > "$output_file"
 
-              # Loop through each file in the directory
               for file in /existing-secrets/*; do
-                # Get the filename without the directory path
                 filename=$(basename "$file")
-                # Read the content of the file
                 content=$(cat "$file")
-                # Append the filename and content to the YAML file
                 echo "$filename: |" >> "$output_file"
                 while IFS= read -r line; do
                   echo "  $line" >> "$output_file"
                 done <<< "$content"
               done
-              EOF
 
-              chmod +x "$tmp_script"
-
-              # Initial generation of file
-              sh "$tmp_script"
-
-              # Run inotifyd to watch for changes and regenerate the YAML file
-              inotifyd "$tmp_script" /existing-secrets:cwm
-        {{- end }}
         {{- if or .Values.mariadb.enabled (eq (include "sogo.db.parsed.type" .) "mysql") }}
         - name: mariadb-isalive
           image: {{ .Values.mariadb.image.registry | default "docker.io" }}/{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}
@@ -285,7 +270,7 @@ spec:
             secretName: {{ .name }}
         {{- end }}
         {{- if .Values.sogo.existingSecrets }}
-        - name: {{ template "sogo.fullname" . }}-sidecar
+        - name: {{ template "sogo.fullname" . }}-shared
           emptyDir: {}
         {{- end }}
         {{- with .Values.sogo.extraVolumes }}
