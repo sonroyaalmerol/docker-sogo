@@ -19,3 +19,5 @@ mariadb:
   primary:
     persistence:
       enabled: false
+memcached:
+  enabled: true

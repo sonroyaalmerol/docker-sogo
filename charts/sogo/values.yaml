@@ -258,7 +258,7 @@ mariadb:
 ##
 memcached:
   ## Only enable this if you don't have an external database
-  enabled: false
+  enabled: true
 
 
 ## Enable pod autoscaling using HorizontalPodAutoscaler

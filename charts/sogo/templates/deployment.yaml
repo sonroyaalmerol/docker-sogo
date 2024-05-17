@@ -34,6 +34,11 @@ spec:
         {{- if .Values.memcached.enabled }}
         {{ template "sogo.memcached.fullname" . }}-client: "true"
         {{- end }}
+        {{- if .Values.mariadb.enabled }}
+        {{ template "sogo.memcached.fullname" . }}-client: "true"
+        {{- else if .Values.postgresql.enabled }}
+        {{ template "sogo.memcached.fullname" . }}-client: "true"
+        {{- end }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

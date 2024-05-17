@@ -131,8 +131,24 @@ SOGoUserSources:
 {{- end -}}
 {{- end -}}
 
+{{- define "sogo.mariadb.fullname" -}}
+{{- if or .Values.mariadb.enabled (eq (include "sogo.db.parsed.type" .) "mysql") -}}
+{{- include "sogo.db.parsed.hostname" . | default (printf "%s-mariadb" .Release.Name) -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "sogo.postgresql.fullname" -}}
+{{- if or .Values.postgresql.enabled (eq (include "sogo.db.parsed.type" .) "postgresql") -}}
+{{- include "sogo.db.parsed.hostname" . | default (include "postgresql.v1.primary.fullname" .Subcharts.postgresql) -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "sogo.memcached.fullname" -}}
+{{ template "common.names.fullname" .Subcharts.memcached }}
+{{- end -}}
+
 {{- define "sogo.memcached.configs" -}}
-SOGoMemcachedHost: {{ template "common.names.fullname" .Subcharts.memcached }}
+SOGoMemcachedHost: {{ template "sogo.memcached.fullname" . }}
 {{- end -}}
 
 {{- define "sogo.ingress.apiVersion" -}}
