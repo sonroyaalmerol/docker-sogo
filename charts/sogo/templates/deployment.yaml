@@ -160,22 +160,8 @@ spec:
               subPath: internal-memcached
               readOnly: true
             {{- end }}
-        {{- with .Values.sogo.extraSidecarContainers }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      initContainers:
-        {{- if .Values.sogo.extraInitContainers }}
-        {{- with .Values.sogo.extraInitContainers }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-        {{- end }}
-        - name: secrets-watcher
+        - name: {{ .Chart.Name }}-ext-secrets
           image: alpine:3.19
-          restartPolicy: Always
           volumeMounts:
             - name: {{ template "sogo.fullname" . }}-tmp
               mountPath: /secrets
@@ -219,6 +205,19 @@ spec:
               # Run inotifyd to watch for changes and regenerate the YAML file
               inotifyd "$tmp_script" /existing-secrets:cwm
 
+        {{- with .Values.sogo.extraSidecarContainers }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- if .Values.sogo.extraInitContainers }}
+        {{- with .Values.sogo.extraInitContainers }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- end }}
         {{- if or .Values.mariadb.enabled (eq (include "sogo.db.parsed.type" .) "mysql") }}
         - name: mariadb-isalive
           image: {{ .Values.mariadb.image.registry | default "docker.io" }}/{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}
