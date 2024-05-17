@@ -167,10 +167,11 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if or .Values.sogo.extraInitContainers .Values.sogo.configs.OCSFolderInfoURL .Values.mariadb.enabled .Values.postgresql.enabled }}
       initContainers:
+        {{- if .Values.sogo.extraInitContainers }}
         {{- with .Values.sogo.extraInitContainers }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
         {{- end }}
         - name: init-secrets
           image: busybox
@@ -203,7 +204,6 @@ spec:
                   echo "  $line" >> "$output_file"
                 done <<< "$content"
               done
-
         {{- if or .Values.mariadb.enabled (eq (include "sogo.db.parsed.type" .) "mysql") }}
         - name: mariadb-isalive
           image: {{ .Values.mariadb.image.registry | default "docker.io" }}/{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}
@@ -244,7 +244,6 @@ spec:
             - "-c"
             - "until pg_isready -h ${POSTGRES_HOST} -p ${POSTGRES_PORT} -U ${POSTGRES_USER} ; do sleep 2 ; done"
         {{- end }}{{/* end-if any database-initContainer */}}
-      {{- end }}{{/* end-if any initContainer */}}
       {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
