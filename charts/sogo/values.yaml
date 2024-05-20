@@ -116,16 +116,16 @@ sogo:
     sieve: {}
       # username: 'sieve-admin-username'
       # password: 'sieve-admin-password'
-      ## existingSecret should contain the sieve admin credentials (username:passwd) in the "creds" key. 
+      ## existingSecret should contain the sieve admin credentials (username:passwd) in the "creds" key.
       # existingSecret: ''
-  
+
   # Session cleanup - runs every minute
   #   - Adjust the maxInactivity (in minutes) parameter to suit your needs
   # Default: Sessions without activity since 60 minutes will be dropped:
   sessionCleanup:
     enabled: false
     maxInactivity: 60
-  
+
   # Email alarms - runs every minutes
   # If you need to use SMTP AUTH for outgoing mails, specify credentials to use
   emailAlarms:
@@ -133,7 +133,7 @@ sogo:
     smtp: {}
       # username: 'smtp-username'
       # password: 'smtp-password'
-      ## existingSecret should contain the smtp admin credentials (username:passwd) in the "creds" key. 
+      ## existingSecret should contain the smtp admin credentials (username:passwd) in the "creds" key.
       # existingSecret: ''
 
   # Daily backups
