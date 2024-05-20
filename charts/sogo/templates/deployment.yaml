@@ -136,6 +136,40 @@ spec:
               subPath: configs
               readOnly: true
             {{- end }}
+            {{- if .Values.sogo.vacationExpiration.enabled }}
+            - name: sogo-sieve-creds
+              mountPath: /etc/sogo/sieve.creds
+              subPath: creds
+              readOnly: true
+            - name: sogo-vacation-cron
+              mountPath: /etc/cron.d/sogo-vacation
+              subPath: cron
+              readOnly: true
+            {{- end }}
+            {{- if .Values.sogo.emailAlarms.enabled }}
+            - name: sogo-smtp-creds
+              mountPath: /etc/sogo/smtp.creds
+              subPath: creds
+              readOnly: true
+            - name: sogo-email-alarms-cron
+              mountPath: /etc/cron.d/sogo-email-alarms
+              subPath: cron
+              readOnly: true
+            {{- end }}
+            {{- if .Values.sogo.sessionCleanup.enabled }}
+            - name: sogo-session-cron
+              mountPath: /etc/cron.d/sogo-session-cleanup
+              subPath: cron
+              readOnly: true
+            {{- end }}
+            {{- if .Values.sogo.backup.enabled }}
+            - name: sogo-backups
+              mountPath: /home/sogo/backups
+            - name: sogo-backup-cron
+              mountPath: /etc/cron.d/sogo-backup
+              subPath: cron
+              readOnly: true
+            {{- end }}
             {{- if .Values.sogo.theme.js }}
             - name: sogo-custom-theme
               mountPath: /usr/local/lib/GNUstep/SOGo/WebServerResources/js/helm-theme.js
@@ -249,7 +283,7 @@ spec:
           command:
             - "sh"
             - "-c"
-            - "until mysql --host=${MYSQL_HOST} --port=${MYSQL_PORT} --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} --execute=\"SELECT 1;\"; do echo waiting for mysql; sleep 2; done;"
+            - "until mariadb --host=${MYSQL_HOST} --port=${MYSQL_PORT} --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} --execute=\"SELECT 1;\"; do echo waiting for mysql; sleep 2; done;"
         {{- else if or .Values.postgresql.enabled (eq (include "sogo.db.parsed.type" .) "postgresql") }}
         - name: postgresql-isready
           image: {{ .Values.postgresql.image.registry | default "docker.io"  }}/{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}
@@ -277,6 +311,37 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
+        {{- if .Values.sogo.backup.enabled }}
+        - name: sogo-backups
+          persistentVolumeClaim:
+            claimName: {{ if .Values.sogo.backup.persistence.existingClaim }}{{ .Values.sogo.backup.persistence.existingClaim }}{{- else }}{{ template "sogo.fullname" . }}-backups{{- end }}
+        {{- end }}
+        {{- if .Values.sogo.vacationExpiration.enabled }}
+        - name: sogo-sieve-creds
+          secret:
+            secretName: {{ if .Values.sogo.vacationExpiration.sieve.existingSecret }}{{ .Values.sogo.vacationExpiration.sieve.existingSecret }}{{- else }}{{ template "sogo.fullname" . }}-sieve-creds{{- end }}
+        - name: sogo-vacation-cron
+          configMap:
+            name: {{ template "sogo.fullname" . }}-vacation-cron
+        {{- end }}
+        {{- if .Values.sogo.emailAlarms.enabled }}
+        - name: sogo-smtp-creds
+          secret:
+            secretName: {{ if .Values.sogo.emailAlarms.smtp.existingSecret }}{{ .Values.sogo.emailAlarms.smtp.existingSecret }}{{- else }}{{ template "sogo.fullname" . }}-smtp-creds{{- end }}
+        - name: sogo-email-alarms-cron
+          configMap:
+            name: {{ template "sogo.fullname" . }}-email-alarms-cron
+        {{- end }}
+        {{- if .Values.sogo.sessionCleanup.enabled }}
+        - name: sogo-session-cron
+          configMap:
+            name: {{ template "sogo.fullname" . }}-session-cron
+        {{- end }}
+        {{- if .Values.sogo.backup.enabled }}
+        - name: sogo-backup-cron
+          configMap:
+            name: {{ template "sogo.fullname" . }}-backup-cron
+        {{- end }}
         {{- if .Values.sogo.configs }}
         - name: sogo-configs
           configMap:

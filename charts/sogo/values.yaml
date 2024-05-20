@@ -108,6 +108,59 @@ sogo:
     #  .backgroundPalette('frost-grey');
     # css: |
     #   <insert generated CSS here>
+
+  # Vacation messages expiration
+  vacationExpiration:
+    enabled: false
+    schedule: '*/5 * * * *'
+    sieve: {}
+      # username: 'sieve-admin-username'
+      # password: 'sieve-admin-password'
+      ## existingSecret should contain the sieve admin credentials (username:passwd) in the "creds" key.
+      # existingSecret: ''
+
+  # Session cleanup - runs every minute
+  #   - Adjust the maxInactivity (in minutes) parameter to suit your needs
+  # Default: Sessions without activity since 60 minutes will be dropped:
+  sessionCleanup:
+    enabled: false
+    maxInactivity: 60
+
+  # Email alarms - runs every minutes
+  # If you need to use SMTP AUTH for outgoing mails, specify credentials to use
+  emailAlarms:
+    enabled: false
+    smtp: {}
+      # username: 'smtp-username'
+      # password: 'smtp-password'
+      ## existingSecret should contain the smtp admin credentials (username:passwd) in the "creds" key.
+      # existingSecret: ''
+
+  # Daily backups
+  #   - will keep 31 days worth of backups by default
+  #   - runs once a day by default, but can run more frequently
+  backup:
+    enabled: false
+    schedule: 30 0 * * *
+    persistence:
+      annotations: {}
+      ## SOGo Backups Persistent Volume Storage Class
+      ## If defined, storageClassName: <storageClass>
+      ## If set to "-", storageClassName: "", which disables dynamic provisioning
+      ## If undefined (the default) or set to null, no storageClassName spec is
+      ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+      ##   GKE, AWS & OpenStack)
+      ##
+      # storageClass: "-"
+
+      ## A manually managed Persistent Volume and Claim
+      ## Requires persistence.enabled: true
+      ## If defined, PVC must be created manually before volume will be bound
+      # existingClaim:
+
+      accessMode: ReadWriteOnce
+      size: 8Gi
+
   ## Strategy used to replace old pods
   ## IMPORTANT: use with care, it is suggested to leave as that for upgrade purposes
   ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
