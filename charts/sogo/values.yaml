@@ -58,6 +58,9 @@ sogo:
   # If web server is not binding default port, you can define it
   containerPort: 80
 
+  # Enable all logs from SOGo
+  enableVerboseLogs: false
+
   # SOGo configuration options
   # ref: https://www.sogo.nu/files/docs/SOGoInstallationGuide.html
   configs:
@@ -84,6 +87,27 @@ sogo:
   # Name of Secret containing the configurations
   existingSecrets:
 
+  ## SOGo Custom Theming
+  ## NOTE: SOGoUIxDebugEnabled is automatically set to YES when only .sogo.theme.js is set
+  ## ref: https://www.sogo.nu/support/faq/how-to-change-the-color-theme.html
+  theme: {}
+    # js: |
+    #  $mdThemingProvider.theme('default')
+    #  .primaryPalette('green-cow', {
+    #    'default': '400',  // background color of top toolbars
+    #    'hue-1': '400',
+    #    'hue-2': '600',    // background color of sidebar toolbar
+    #    'hue-3': 'A700'
+    #  })
+    #  .accentPalette('green', {
+    #    'default': '600',  // background color of fab buttons and login screen
+    #    'hue-1': '300',    // background color of center list toolbar
+    #    'hue-2': '300',    // highlight color for selected mail and current day calendar
+    #    'hue-3': 'A700'
+    #  })
+    #  .backgroundPalette('frost-grey');
+    # css: |
+    #   <insert generated CSS here>
   ## Strategy used to replace old pods
   ## IMPORTANT: use with care, it is suggested to leave as that for upgrade purposes
   ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy

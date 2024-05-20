@@ -136,6 +136,18 @@ spec:
               subPath: configs
               readOnly: true
             {{- end }}
+            {{- if .Values.sogo.theme.js }}
+            - name: sogo-custom-theme
+              mountPath: /usr/local/lib/GNUstep/SOGo/WebServerResources/js/helm-theme.js
+              subPath: theme.js
+              readOnly: true
+            {{- end }}
+            {{- if .Values.sogo.theme.css }}
+            - name: sogo-custom-theme
+              mountPath: /usr/local/lib/GNUstep/SOGo/WebServerResources/js/theme-default.css
+              subPath: theme.css
+              readOnly: true
+            {{- end }}
             {{- if .Values.sogo.secrets }}
             - name: sogo-secrets
               mountPath: /etc/sogo/sogo.conf.d/99-secrets.yaml
@@ -174,8 +186,8 @@ spec:
         {{- end }}
         {{- end }}
         - name: {{ .Chart.Name }}-ext-secrets
-          image: alpine:3.19
-          restartPolicy: Always
+          image: {{ include "sogo.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           volumeMounts:
             - name: {{ template "sogo.fullname" . }}-tmp
               mountPath: /secrets
@@ -213,13 +225,9 @@ spec:
 
               chmod +x "$tmp_script"
 
-              # Initial generation of file
+              # Generation of config file
               sh "$tmp_script"
 
-              echo "Watching existing secrets..."
-
-              # Run inotifyd to watch for changes and regenerate the YAML file
-              inotifyd "$tmp_script" /existing-secrets:cwm
         {{- if or .Values.mariadb.enabled (eq (include "sogo.db.parsed.type" .) "mysql") }}
         - name: mariadb-isalive
           image: {{ .Values.mariadb.image.registry | default "docker.io" }}/{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}
@@ -273,6 +281,11 @@ spec:
         - name: sogo-configs
           configMap:
             name: {{ template "sogo.fullname" . }}-config
+        {{- end }}
+        {{- if or .Values.sogo.theme.js .Values.sogo.theme.css }}
+        - name: sogo-custom-theme
+          configMap:
+            name: {{ template "sogo.fullname" . }}-theme
         {{- end }}
         {{- if .Values.sogo.secrets }}
         - name: sogo-secrets
