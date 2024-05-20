@@ -14,3 +14,4 @@ data:
 {{- else }}
   cron: {{ squote "* * * * *  sogo	/usr/sbin/sogo-ealarms-notify > /dev/null 2>&1" }}
 {{- end }}
+{{- end }}
