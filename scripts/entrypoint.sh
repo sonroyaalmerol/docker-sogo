@@ -36,7 +36,7 @@ chmod 750 /etc/sogo
 chown root:sogo /etc/sogo
 chmod 640 /etc/sogo/sogo.conf
 chown root:sogo /etc/sogo/sogo.conf
-chmod +x /usr/sbin/sogod
+chmod +x /usr/local/sbin/sogod
 
 # Start supervisor
 /usr/bin/supervisord -c /opt/supervisord.conf
