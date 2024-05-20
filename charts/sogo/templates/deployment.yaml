@@ -141,12 +141,6 @@ spec:
               mountPath: /usr/local/lib/GNUstep/SOGo/WebServerResources/js/helm-theme.js
               subPath: theme.js
               readOnly: true
-            {{- if not .Values.sogo.theme.css }}
-            - name: sogo-configs
-              mountPath: /etc/sogo/sogo.conf.d/97-init-theme.yaml
-              subPath: init-theme-configs
-              readOnly: true
-            {{- end }}
             {{- end }}
             {{- if .Values.sogo.theme.css }}
             - name: sogo-custom-theme
