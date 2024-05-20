@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
-{{- if or .Values.sogo.smtp.username .Values.sogo.smtp.existingSecret }}
+{{- if or .Values.sogo.emailAlarms.smtp.username .Values.sogo.emailAlarms.smtp.existingSecret }}
   cron: {{ squote "* * * * *  sogo	/usr/sbin/sogo-ealarms-notify -p /etc/sogo/smtp.creds > /dev/null 2>&1" }}
 {{- else }}
   cron: {{ squote "* * * * *  sogo	/usr/sbin/sogo-ealarms-notify > /dev/null 2>&1" }}
