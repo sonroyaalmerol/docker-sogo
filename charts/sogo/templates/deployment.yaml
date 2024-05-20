@@ -136,6 +136,14 @@ spec:
               subPath: configs
               readOnly: true
             {{- end }}
+            {{- if .Values.sogo.backup.enabled }}
+            - name: sogo-backups
+              mountPath: /home/sogo/backups
+            - name: sogo-backup-cron
+              mountPath: /etc/cron.d/sogo-backup
+              subPath: cron
+              readOnly: true
+            {{- end }}
             {{- if .Values.sogo.theme.js }}
             - name: sogo-custom-theme
               mountPath: /usr/local/lib/GNUstep/SOGo/WebServerResources/js/helm-theme.js
@@ -277,6 +285,16 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
+        {{- if .Values.sogo.backup.enabled }}
+        - name: sogo-backups
+          persistentVolumeClaim:
+            claimName: {{ if .Values.sogo.backup.persistence.existingClaim }}{{ .Values.sogo.backup.persistence.existingClaim }}{{- else }}{{ template "sogo.fullname" . }}-backups{{- end }}
+        {{- end }}
+        {{- if .Values.sogo.backup.enabled }}
+        - name: sogo-backup-cron
+          configMap:
+            name: {{ template "sogo.fullname" . }}-backup-cron
+        {{- end }}
         {{- if .Values.sogo.configs }}
         - name: sogo-configs
           configMap:
