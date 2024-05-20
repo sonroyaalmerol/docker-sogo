@@ -11,6 +11,11 @@ metadata:
 data:
   configs: |
 {{- .Values.sogo.configs | toYaml | nindent 4 }}
+{{- if .Values.sogo.theme.js }}
+    SOGoUIAdditionalJSFiles: [js/helm-theme.js]
+{{- end }}
+  init-theme-configs: |
+    SOGoUIxDebugEnabled: true
 {{- if or .Values.mariadb.enabled .Values.postgresql.enabled }}
   internal-db: |
 {{- include "sogo.db.configs" . | nindent 4 }}

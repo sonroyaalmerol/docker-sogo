@@ -136,6 +136,24 @@ spec:
               subPath: configs
               readOnly: true
             {{- end }}
+            {{- if .Values.sogo.theme.js }}
+            - name: sogo-custom-theme
+              mountPath: /usr/local/lib/GNUstep/SOGo/WebServerResources/js/helm-theme.js
+              subPath: theme.js
+              readOnly: true
+            {{- if not .Values.sogo.theme.css }}
+            - name: sogo-configs
+              mountPath: /etc/sogo/sogo.conf.d/97-init-theme.yaml
+              subPath: init-theme-configs
+              readOnly: true
+            {{- end }}
+            {{- end }}
+            {{- if .Values.sogo.theme.css }}
+            - name: sogo-custom-theme
+              mountPath: /usr/local/lib/GNUstep/SOGo/WebServerResources/js/theme-default.css
+              subPath: theme.css
+              readOnly: true
+            {{- end }}
             {{- if .Values.sogo.secrets }}
             - name: sogo-secrets
               mountPath: /etc/sogo/sogo.conf.d/99-secrets.yaml
@@ -268,6 +286,11 @@ spec:
         - name: sogo-configs
           configMap:
             name: {{ template "sogo.fullname" . }}-config
+        {{- end }}
+        {{- if or .Values.sogo.theme.js .Values.sogo.theme.css }}
+        - name: sogo-custom-theme
+          configMap:
+            name: {{ template "sogo.fullname" . }}-theme
         {{- end }}
         {{- if .Values.sogo.secrets }}
         - name: sogo-secrets
