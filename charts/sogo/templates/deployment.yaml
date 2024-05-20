@@ -136,6 +136,32 @@ spec:
               subPath: configs
               readOnly: true
             {{- end }}
+            {{- if .Values.sogo.vacationExpiration.enabled }}
+            - name: sogo-sieve-creds
+              mountPath: /etc/sogo/sieve.creds
+              subPath: creds
+              readOnly: true
+            - name: sogo-vacation-cron
+              mountPath: /etc/cron.d/sogo-vacation
+              subPath: cron
+              readOnly: true
+            {{- end }}
+            {{- if .Values.sogo.emailAlarms.enabled }}
+            - name: sogo-smtp-creds
+              mountPath: /etc/sogo/smtp.creds
+              subPath: creds
+              readOnly: true
+            - name: sogo-email-alarms-cron
+              mountPath: /etc/cron.d/sogo-email-alarms
+              subPath: cron
+              readOnly: true
+            {{- end }}
+            {{- if .Values.sogo.sessionCleanup.enabled }}
+            - name: sogo-session-cron
+              mountPath: /etc/cron.d/sogo-session-cleanup
+              subPath: cron
+              readOnly: true
+            {{- end }}
             {{- if .Values.sogo.backup.enabled }}
             - name: sogo-backups
               mountPath: /home/sogo/backups
@@ -289,6 +315,27 @@ spec:
         - name: sogo-backups
           persistentVolumeClaim:
             claimName: {{ if .Values.sogo.backup.persistence.existingClaim }}{{ .Values.sogo.backup.persistence.existingClaim }}{{- else }}{{ template "sogo.fullname" . }}-backups{{- end }}
+        {{- end }}
+        {{- if .Values.sogo.vacationExpiration.enabled }}
+        - name: sogo-sieve-creds
+          secret:
+            secretName: {{ if .Values.sogo.vacationExpiration.sieve.existingSecret }}{{ .Values.sogo.vacationExpiration.sieve.existingSecret }}{{- else }}{{ template "sogo.fullname" . }}-sieve-creds{{- end }}
+        - name: sogo-vacation-cron
+          configMap:
+            name: {{ template "sogo.fullname" . }}-vacation-cron
+        {{- end }}
+        {{- if .Values.sogo.emailAlarms.enabled }}
+        - name: sogo-smtp-creds
+          secret:
+            secretName: {{ if .Values.sogo.emailAlarms.smtp.existingSecret }}{{ .Values.sogo.emailAlarms.smtp.existingSecret }}{{- else }}{{ template "sogo.fullname" . }}-smtp-creds{{- end }}
+        - name: sogo-email-alarms-cron
+          configMap:
+            name: {{ template "sogo.fullname" . }}-email-alarms-cron
+        {{- end }}
+        {{- if .Values.sogo.sessionCleanup.enabled }}
+        - name: sogo-session-cron
+          configMap:
+            name: {{ template "sogo.fullname" . }}-session-cron
         {{- end }}
         {{- if .Values.sogo.backup.enabled }}
         - name: sogo-backup-cron
