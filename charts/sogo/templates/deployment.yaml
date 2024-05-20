@@ -175,7 +175,6 @@ spec:
         {{- end }}
         - name: {{ .Chart.Name }}-ext-secrets
           image: alpine:3.19
-          restartPolicy: Always
           volumeMounts:
             - name: {{ template "sogo.fullname" . }}-tmp
               mountPath: /secrets
@@ -213,13 +212,9 @@ spec:
 
               chmod +x "$tmp_script"
 
-              # Initial generation of file
+              # Generation of config file
               sh "$tmp_script"
 
-              echo "Watching existing secrets..."
-
-              # Run inotifyd to watch for changes and regenerate the YAML file
-              inotifyd "$tmp_script" /existing-secrets:cwm
         {{- if or .Values.mariadb.enabled (eq (include "sogo.db.parsed.type" .) "mysql") }}
         - name: mariadb-isalive
           image: {{ .Values.mariadb.image.registry | default "docker.io" }}/{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}
