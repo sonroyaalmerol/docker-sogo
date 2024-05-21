@@ -226,9 +226,11 @@ spec:
             - name: {{ template "sogo.fullname" . }}-tmp
               mountPath: /secrets
             {{- if .Values.sogo.existingSecrets }}
-            - name: existing-secrets
-              mountPath: /existing-secrets
+            {{- range .Values.sogo.existingSecrets }}
+            - name: {{ printf "existing-secrets-%s" (kebabcase .) }}
+              mountPath: {{ printf "/existing-secrets/%s" (kebabcase .) }}
               readOnly: true
+            {{- end }}
             {{- end }}
           command:
             - "sh"
@@ -239,20 +241,24 @@ spec:
               touch "$tmp_script"
               
               cat << 'EOF' > "$tmp_script"
-              #!/bin/sh
+              #!/bin/bash
 
               output_file="/secrets/existing-secrets.yaml"
               > "$output_file"
 
               # Loop through each file in the directory
-              for file in /existing-secrets/*; do
+              # Find all files within the existing-secrets directory and its subdirectories
+              find /existing-secrets -type f | while read -r file; do
                 # Get the filename without the directory path
                 filename=$(basename "$file")
-                # Read the content of the file
+                # Read the content of the file and indent each line with two spaces
                 content=$(cat "$file")
-                # Append the filename and content to the YAML file
+                # Append the filename and content to the YAML file if the content is not empty
                 if [ -n "$content" ]; then
-                  echo "$filename: $content" >> "$output_file"
+                  echo "$filename: |-" >> "$output_file"
+                  while IFS= read -r line; do
+                    echo "  $line" >> "$output_file"
+                  done <<< "$content"
                 fi
               done
               EOF
@@ -260,7 +266,7 @@ spec:
               chmod +x "$tmp_script"
 
               # Generation of config file
-              sh "$tmp_script"
+              bash "$tmp_script"
 
         {{- if or .Values.mariadb.enabled (eq (include "sogo.db.parsed.type" .) "mysql") }}
         - name: mariadb-isalive
@@ -358,9 +364,11 @@ spec:
             secretName: {{ template "sogo.fullname" . }}-secret
         {{- end }}
         {{- if .Values.sogo.existingSecrets }}
-        - name: existing-secrets
+        {{- range .Values.sogo.existingSecrets }}
+        - name: {{ printf "existing-secrets-%s" (kebabcase .) }}
           secret:
-            secretName: {{ .Values.sogo.existingSecrets }}
+            secretName: {{ . }}
+        {{- end }}
         {{- end }}
         - name: {{ template "sogo.fullname" . }}-tmp
           emptyDir: {}
