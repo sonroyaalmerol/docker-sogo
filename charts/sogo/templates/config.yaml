@@ -28,9 +28,9 @@ data:
     SoSecurityManagerDebugEnabled: true
     WODontZipResponse: true
     WODebugZipResponse: true
+{{- end }}
 {{- if and .Values.sogo.theme.js (not .Values.sogo.theme.css) }}
     SOGoUIxDebugEnabled: true
-{{- end }}
 {{- end }}
 {{- if .Values.sogo.theme.js }}
     SOGoUIAdditionalJSFiles: [js/helm-theme.js]

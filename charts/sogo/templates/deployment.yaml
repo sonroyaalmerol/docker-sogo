@@ -227,12 +227,8 @@ spec:
               mountPath: /secrets
             {{- if .Values.sogo.existingSecrets }}
             {{- range .Values.sogo.existingSecrets }}
-            - name: {{ printf "existing-secrets-%s" (kebabcase .name) }}
-              {{- if .yaml }}
-              mountPath: {{ printf "/existing-secrets/%s__yaml" (kebabcase .name) }}
-              {{- else }}
-              mountPath: {{ printf "/existing-secrets/%s" (kebabcase .name) }}
-              {{- end }}
+            - name: {{ printf "existing-secrets-%s" (kebabcase .) }}
+              mountPath: {{ printf "/existing-secrets/%s" (kebabcase .) }}
               readOnly: true
             {{- end }}
             {{- end }}
@@ -380,7 +376,7 @@ spec:
         {{- end }}
         {{- if .Values.sogo.existingSecrets }}
         {{- range .Values.sogo.existingSecrets }}
-        - name: {{ printf "existing-secrets-%s" (kebabcase .name) }}
+        - name: {{ printf "existing-secrets-%s" (kebabcase .) }}
           secret:
             secretName: {{ .name }}
         {{- end }}
