@@ -87,6 +87,7 @@ sogo:
   # Array of secret names containing the configurations
   # All secret values will be parsed as a string by default
   # To parse a secret value as a YAML, you must append "__yaml" to the secret key
+  # NOTE: All keys in the secrets will be imported as a SOGo configuration.
   existingSecrets: []
     # - secretName1
     # - secretName2
