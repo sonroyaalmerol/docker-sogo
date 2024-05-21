@@ -84,8 +84,12 @@ sogo:
     # OCSStoreURL: "mysql://sogo:pass@db:3306/sogo/sogo_store"
     # OCSAclURL: "mysql://sogo:pass@db:3306/sogo/sogo_acl"
 
-  # Array of secret names containing the configurations
+  # Array of secrets containing the configurations
   existingSecrets: []
+    # - name: secretName
+    # - name: secretName2
+    #   yaml: true
+    ### having yaml set to true would parse the secret as a yaml file
 
   ## SOGo Custom Theming
   ## NOTE: SOGoUIxDebugEnabled is automatically set to YES when only .sogo.theme.js is set

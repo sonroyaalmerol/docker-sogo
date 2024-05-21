@@ -227,8 +227,12 @@ spec:
               mountPath: /secrets
             {{- if .Values.sogo.existingSecrets }}
             {{- range .Values.sogo.existingSecrets }}
-            - name: {{ printf "existing-secrets-%s" (kebabcase .) }}
-              mountPath: {{ printf "/existing-secrets/%s" (kebabcase .) }}
+            - name: {{ printf "existing-secrets-%s" (kebabcase .name) }}
+              {{- if .yaml }}
+              mountPath: {{ printf "/existing-secrets/%s__yaml" (kebabcase .name) }}
+              {{- else }}
+              mountPath: {{ printf "/existing-secrets/%s" (kebabcase .name) }}
+              {{- end }}
               readOnly: true
             {{- end }}
             {{- end }}
@@ -249,13 +253,25 @@ spec:
               # Loop through each file in the directory
               # Find all files within the existing-secrets directory and its subdirectories
               find /existing-secrets -type f | while read -r file; do
+                local is_yaml
+                is_yaml=false
+
                 # Get the filename without the directory path
                 filename=$(basename "$file")
+                if [[ $filename == *"__yaml" ]]; then
+                  is_yaml=true
+                  filename="${filename/__yaml/}"
+                fi
+
                 # Read the content of the file and indent each line with two spaces
                 content=$(cat "$file")
                 # Append the filename and content to the YAML file if the content is not empty
                 if [ -n "$content" ]; then
-                  echo "$filename: |-" >> "$output_file"
+                  if [ "$is_yaml" = true ]; then
+                    echo "$filename:" >> "$output_file"
+                  else
+                    echo "$filename: |-" >> "$output_file"
+                  fi
                   while IFS= read -r line; do
                     echo "  $line" >> "$output_file"
                   done <<< "$content"
@@ -365,9 +381,9 @@ spec:
         {{- end }}
         {{- if .Values.sogo.existingSecrets }}
         {{- range .Values.sogo.existingSecrets }}
-        - name: {{ printf "existing-secrets-%s" (kebabcase .) }}
+        - name: {{ printf "existing-secrets-%s" (kebabcase .name) }}
           secret:
-            secretName: {{ . }}
+            secretName: {{ .name }}
         {{- end }}
         {{- end }}
         - name: {{ template "sogo.fullname" . }}-tmp
