@@ -252,10 +252,13 @@ spec:
                 # Get the filename without the directory path
                 filename=$(basename "$file")
                 # Read the content of the file and indent each line with two spaces
-                content=$(sed 's/^/  /' "$file")
+                content=$(cat "$file")
                 # Append the filename and content to the YAML file if the content is not empty
                 if [ -n "$content" ]; then
-                  echo -e "$filename: |-\n$content" >> "$output_file"
+                  echo "$filename: |-" >> "$output_file"
+                  while IFS= read -r line; do
+                    echo "  $line" >> "$output_file"
+                  done <<< "$content"
                 fi
               done
               EOF
