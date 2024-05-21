@@ -177,9 +177,21 @@ spec:
               readOnly: true
             {{- end }}
             {{- if .Values.sogo.theme.css }}
-            - name: sogo-custom-theme
+            - name: {{ template "sogo.fullname" . }}-customizations
               mountPath: /usr/local/lib/GNUstep/SOGo/WebServerResources/js/theme-default.css
-              subPath: theme.css
+              subPath: helm.css
+              readOnly: true
+            {{- end }}
+            {{- if .Values.sogo.theme.logo }}
+            - name: {{ template "sogo.fullname" . }}-customizations
+              mountPath: /usr/local/lib/GNUstep/SOGo/WebServerResources/img/sogo-full.svg
+              subPath: helm.svg
+              readOnly: true
+            {{- end }}
+            {{- if .Values.sogo.theme.favicon }}
+            - name: {{ template "sogo.fullname" . }}-customizations
+              mountPath: /usr/local/lib/GNUstep/SOGo/WebServerResources/img/sogo.ico
+              subPath: helm.ico
               readOnly: true
             {{- end }}
             {{- if .Values.sogo.secrets }}
@@ -222,9 +234,18 @@ spec:
         - name: {{ .Chart.Name }}-ext-secrets
           image: {{ include "sogo.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: CSS_URL
+              value: {{ .Values.sogo.theme.css }}
+            - name: LOGO_URL
+              value: {{ .Values.sogo.theme.logo }}
+            - name: FAVICON_URL
+              value: {{ .Values.sogo.theme.favicon }}
           volumeMounts:
             - name: {{ template "sogo.fullname" . }}-tmp
               mountPath: /secrets
+            - name: {{ template "sogo.fullname" . }}-customizations
+              mountPath: /customizations
             {{- if .Values.sogo.existingSecrets }}
             {{- range .Values.sogo.existingSecrets }}
             - name: {{ printf "existing-secrets-%s" (kebabcase .) }}
@@ -278,6 +299,16 @@ spec:
 
               # Generation of config file
               bash "$tmp_script"
+
+              if [ -n "$CSS_URL" ]; then
+                curl -L -o /customizations/helm.css "$CSS_URL"
+              fi
+              if [ -n "$LOGO_URL" ]; then
+                curl -L -o /customizations/helm.svg "$LOGO_URL"
+              fi
+              if [ -n "$FAVICON_URL" ]; then
+                curl -L -o /customizations/helm.ico "$FAVICON_URL"
+              fi
 
         {{- if or .Values.mariadb.enabled (eq (include "sogo.db.parsed.type" .) "mysql") }}
         - name: mariadb-isalive
@@ -382,6 +413,8 @@ spec:
         {{- end }}
         {{- end }}
         - name: {{ template "sogo.fullname" . }}-tmp
+          emptyDir: {}
+        - name: {{ template "sogo.fullname" . }}-customizations
           emptyDir: {}
         {{- with .Values.sogo.extraVolumes }}
         {{- toYaml . | nindent 8 }}
