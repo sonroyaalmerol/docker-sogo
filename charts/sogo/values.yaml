@@ -93,6 +93,7 @@ sogo:
 
   ## SOGo Custom Theming
   ## NOTE: SOGoUIxDebugEnabled is automatically set to YES when only .sogo.theme.js is set
+  ## Setting .sogo.theme.js is only meant for debugging. Using .sogo.theme.css is preferred.
   ## ref: https://www.sogo.nu/support/faq/how-to-change-the-color-theme.html
   theme: {}
     # js: |
@@ -110,8 +111,9 @@ sogo:
     #    'hue-3': 'A700'
     #  })
     #  .backgroundPalette('frost-grey');
-    # css: |
-    #   <insert generated CSS here>
+    # css: <http url for css file (.css)>
+    # logo: <http url for logo file (.svg)>
+    # favicon: <http url for favicon file (.ico)>
 
   # Vacation messages expiration
   vacationExpiration:
