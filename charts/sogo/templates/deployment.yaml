@@ -253,7 +253,6 @@ spec:
               # Loop through each file in the directory
               # Find all files within the existing-secrets directory and its subdirectories
               find /existing-secrets -type f | while read -r file; do
-                local is_yaml
                 is_yaml=false
 
                 # Get the filename without the directory path
