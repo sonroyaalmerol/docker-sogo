@@ -378,7 +378,7 @@ spec:
         {{- range .Values.sogo.existingSecrets }}
         - name: {{ printf "existing-secrets-%s" (kebabcase .) }}
           secret:
-            secretName: {{ .name }}
+            secretName: {{ . }}
         {{- end }}
         {{- end }}
         - name: {{ template "sogo.fullname" . }}-tmp
