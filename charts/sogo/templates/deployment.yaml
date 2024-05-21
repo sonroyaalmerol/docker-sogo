@@ -241,7 +241,7 @@ spec:
               touch "$tmp_script"
               
               cat << 'EOF' > "$tmp_script"
-              #!/bin/sh
+              #!/bin/bash
 
               output_file="/secrets/existing-secrets.yaml"
               > "$output_file"
@@ -266,7 +266,7 @@ spec:
               chmod +x "$tmp_script"
 
               # Generation of config file
-              sh "$tmp_script"
+              bash "$tmp_script"
 
         {{- if or .Values.mariadb.enabled (eq (include "sogo.db.parsed.type" .) "mysql") }}
         - name: mariadb-isalive
