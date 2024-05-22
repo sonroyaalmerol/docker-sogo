@@ -116,6 +116,7 @@ RUN a2enmod \
         proxy \
         proxy_http \
         rewrite \
+        remoteip \
         ssl && \
     echo "/usr/local/lib/sogo" > /etc/ld.so.conf.d/sogo.conf && \
     ldconfig && \
@@ -127,6 +128,13 @@ RUN a2enmod \
     ln -s /usr/local/sbin/sogo-ealarms-notify /usr/sbin/sogo-ealarms-notify && \
     ln -s /usr/local/sbin/sogo-slapd-sockd /usr/sbin/sogo-slapd-sockd && \
     ln -s /etc/apache2/conf-available/SOGo.conf /etc/apache2/conf-enabled/SOGo.conf && \
+    {\
+     echo RemoteIPHeader X-Real-IP ;\
+     echo RemoteIPInternalProxy 10.0.0.0/8 ;\
+     echo RemoteIPInternalProxy 172.16.0.0/12 ;\
+     echo RemoteIPInternalProxy 192.168.0.0/16 ;\
+    } > /etc/apache2/conf-available/remoteip.conf && \
+    a2enconf remoteip && \
     mkdir -p /etc/cron.d /etc/default /etc/sogo /etc/logrotate.d && \
     mv /usr/share/doc/sogo/sogo.cron /etc/cron.d/sogo && \
     mv /usr/share/doc/sogo/sogo-default /etc/default/sogo && \
