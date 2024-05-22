@@ -14,6 +14,54 @@ entries:
           url: https://www.sogo.nu/img/screenshot.png
     apiVersion: v2
     appVersion: 5.10.0
+    created: "2024-05-22T14:30:06.322260849Z"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 15.3.*
+    - condition: mariadb.enabled
+      name: mariadb
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 18.0.*
+    - condition: memcached.enabled
+      name: memcached
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 7.0.*
+    description: A helm chart for the docker-sogo docker image
+    digest: 5fb4e916c8ce7330717af6999343cc887d555f58bee4ef77e9c717ef8e8dfaff
+    home: https://github.com/sonroyaalmerol/docker-sogo
+    icon: https://www.sogo.nu/img/sogo.svg
+    keywords:
+    - sogo
+    - alinto
+    - inverse
+    - mail
+    - calendar
+    maintainers:
+    - email: sogo@snry.me
+      name: Son Roy Almerol
+      url: https://github.com/sonroyaalmerol
+    name: sogo
+    sources:
+    - https://github.com/sonroyaalmerol/docker-sogo
+    type: application
+    urls:
+    - https://github.com/sonroyaalmerol/docker-sogo/releases/download/chart-0.1.10/sogo-0.1.10.tgz
+    version: 0.1.10
+  - annotations:
+      artifacthub.io/images: |
+        - name: docker-sogo
+          image: sonroyaalmerol/docker-sogo:5.10.0-1
+      artifacthub.io/license: MIT
+      artifacthub.io/links: |
+        - name: GitHub source
+          url: https://github.com/sonroyaalmerol/docker-sogo/
+      artifacthub.io/screenshots: |
+        - title: SOGo
+          url: https://www.sogo.nu/img/screenshot.png
+    apiVersion: v2
+    appVersion: 5.10.0
     created: "2024-05-21T19:07:08.998643178Z"
     dependencies:
     - condition: postgresql.enabled
@@ -433,4 +481,4 @@ entries:
     urls:
     - https://github.com/sonroyaalmerol/docker-sogo/releases/download/chart-0.1.0/sogo-0.1.0.tgz
     version: 0.1.0
-generated: "2024-05-21T19:07:08.998707799Z"
+generated: "2024-05-22T14:30:06.322288781Z"
