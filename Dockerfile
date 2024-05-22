@@ -129,7 +129,7 @@ RUN a2enmod \
     ln -s /usr/local/sbin/sogo-slapd-sockd /usr/sbin/sogo-slapd-sockd && \
     ln -s /etc/apache2/conf-available/SOGo.conf /etc/apache2/conf-enabled/SOGo.conf && \
     (echo -e "RemoteIPHeader X-Real-IP\nRemoteIPInternalProxy 10.0.0.0/8\nRemoteIPInternalProxy 172.16.0.0/12\nRemoteIPInternalProxy 192.168.0.0/16\n" > /etc/apache2/conf-available/remoteip.conf) && \
-    a2enconf remoteip && \
+    # a2enconf remoteip && \
     mkdir -p /etc/cron.d /etc/default /etc/sogo /etc/logrotate.d && \
     mv /usr/share/doc/sogo/sogo.cron /etc/cron.d/sogo && \
     mv /usr/share/doc/sogo/sogo-default /etc/default/sogo && \
