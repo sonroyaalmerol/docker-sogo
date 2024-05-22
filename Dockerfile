@@ -128,7 +128,7 @@ RUN a2enmod \
     ln -s /usr/local/sbin/sogo-ealarms-notify /usr/sbin/sogo-ealarms-notify && \
     ln -s /usr/local/sbin/sogo-slapd-sockd /usr/sbin/sogo-slapd-sockd && \
     ln -s /etc/apache2/conf-available/SOGo.conf /etc/apache2/conf-enabled/SOGo.conf && \
-    echo -e "<IfModule mod_remoteip.c>\n    RemoteIPHeader X-Real-IP\n    RemoteIPInternalProxy 10.0.0.0/8\n    RemoteIPInternalProxy 172.16.0.0/12\n    RemoteIPInternalProxy 192.168.0.0/16\n</IfModule>" | tee /etc/apache2/conf-available/remoteip.conf && \
+    (echo -e "<IfModule mod_remoteip.c>\n    RemoteIPHeader X-Real-IP\n    RemoteIPInternalProxy 10.0.0.0/8\n    RemoteIPInternalProxy 172.16.0.0/12\n    RemoteIPInternalProxy 192.168.0.0/16\n</IfModule>" > /etc/apache2/conf-available/remoteip.conf) && \
     ln -s /etc/apache2/conf-available/remoteip.conf /etc/apache2/conf-enabled/remoteip.conf && \
     mkdir -p /etc/cron.d /etc/default /etc/sogo /etc/logrotate.d && \
     mv /usr/share/doc/sogo/sogo.cron /etc/cron.d/sogo && \
