@@ -17,7 +17,7 @@ maintainers:
   email: sogo@snry.me
   url: https://github.com/sonroyaalmerol
 icon: https://www.sogo.nu/img/sogo.svg
-appVersion: 5.11.1
+appVersion: 5.11.2
 deprecated: false
 annotations:
   artifacthub.io/license: MIT
@@ -26,7 +26,7 @@ annotations:
       url: https://github.com/sonroyaalmerol/docker-sogo/
   artifacthub.io/images: |
     - name: docker-sogo
-      image: sonroyaalmerol/docker-sogo:5.11.1-4
+      image: sonroyaalmerol/docker-sogo:5.11.2-5
   artifacthub.io/screenshots: |
     - title: SOGo
       url: https://www.sogo.nu/img/screenshot.png
