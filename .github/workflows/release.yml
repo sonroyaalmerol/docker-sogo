@@ -27,13 +27,19 @@ jobs:
 
           VERSION=$(echo "$RAW_LATEST_RELEASE" | jq -r '.tag_name')
           echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
-
-          echo "BASE_VERSION=$(echo "$VERSION" | sed 's/-.*//')" >> "$GITHUB_OUTPUT"
-
+      
+          BASE_VERSION=$(echo "$VERSION" | sed 's/-.*//')
+          echo "BASE_VERSION=$BASE_VERSION" >> "$GITHUB_OUTPUT"
+      
           REVISION=$([[ "$VERSION" == *-* ]] && echo "$VERSION" | sed 's/.*-//' || echo "")
           echo "REVISION=$REVISION" >> "$GITHUB_OUTPUT"
-
-          NEXT_REVISION=$([[ "$REVISION" =~ ^[0-9]+$ ]] && echo $(($REVISION + 1)) || echo 1)
+      
+          if [ "$BASE_VERSION" != "${{ steps.sogo.outputs.VERSION }}" ]; then
+            NEXT_REVISION=1
+          else
+            NEXT_REVISION=$([[ "$REVISION" =~ ^[0-9]+$ ]] && echo $(($REVISION + 1)) || echo 1)
+          fi
+      
           echo "NEXT_REVISION=$NEXT_REVISION" >> "$GITHUB_OUTPUT"
 
       - name: Decide if release version or not
