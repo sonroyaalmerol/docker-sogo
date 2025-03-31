@@ -10,5 +10,5 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
   cron: |
-    {{ printf "%s sogo  /usr/sbin/sogo-tool update-autoreply -p /etc/sogo/sieve.creds" (.Values.sogo.vacationExpiration.schedule | trimSpace | default "*/5 * * * *") }}
+    {{ printf "%s sogo  /usr/sbin/sogo-tool update-autoreply -p /etc/sogo/sieve.creds" (.Values.sogo.vacationExpiration.schedule | trim | default "*/5 * * * *") }}
 {{- end }}
