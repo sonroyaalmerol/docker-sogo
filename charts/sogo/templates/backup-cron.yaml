@@ -9,5 +9,6 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
-  cron: {{ printf "%s sogo /usr/share/doc/sogo/sogo-backup.sh" (.Values.sogo.backup.schedule | default "30 0 * * *") | squote }}
+  cron: |
+    {{ printf "%s sogo /usr/share/doc/sogo/sogo-backup.sh" (.Values.sogo.backup.schedule | trimSpace | default "30 0 * * *") }}
 {{- end }}

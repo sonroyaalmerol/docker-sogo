@@ -11,9 +11,9 @@ metadata:
 data:
 {{- if or .Values.sogo.emailAlarms.smtp.username .Values.sogo.emailAlarms.smtp.existingSecret }}
   cron: |
-    {{ squote "* * * * *  sogo  /usr/sbin/sogo-ealarms-notify -p /etc/sogo/smtp.creds" }}
+    * * * * *  sogo  /usr/sbin/sogo-ealarms-notify -p /etc/sogo/smtp.creds
 {{- else }}
   cron: |
-    {{ squote "* * * * *  sogo  /usr/sbin/sogo-ealarms-notify" }}
+    * * * * *  sogo  /usr/sbin/sogo-ealarms-notify
 {{- end }}
 {{- end }}
