@@ -161,6 +161,10 @@ spec:
               mountPath: /etc/cron.d/sogo-session-cleanup
               subPath: cron
               readOnly: true
+            - name: sogo-oidc-cron
+              mountPath: /etc/cron.d/sogo-oidc-cleanup
+              subPath: cron
+              readOnly: true
             {{- end }}
             {{- if .Values.sogo.backup.enabled }}
             - name: sogo-backups
@@ -384,6 +388,9 @@ spec:
         - name: sogo-session-cron
           configMap:
             name: {{ template "sogo.fullname" . }}-session-cron
+        - name: sogo-oidc-cron
+          configMap:
+            name: {{ template "sogo.fullname" . }}-oidc-cron
         {{- end }}
         {{- if .Values.sogo.backup.enabled }}
         - name: sogo-backup-cron
