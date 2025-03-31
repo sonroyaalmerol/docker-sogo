@@ -10,5 +10,5 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
   cron: |
-    {{ (printf "* * * * * sogo  /usr/sbin/sogo-tool expire-sessions %d" (.Values.sogo.sessionCleanup.maxInactivity | trim | int)) }}
+    {{ (printf "* * * * * sogo  /usr/sbin/sogo-tool expire-sessions %d" (.Values.sogo.sessionCleanup.maxInactivity | int)) }}
 {{- end }}
