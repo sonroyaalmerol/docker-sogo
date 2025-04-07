@@ -27,8 +27,7 @@ if [ -z "$(ls -A /etc/sogo/sogo.conf.d)" ]; then
 else
   # Generate config file from yaml folder
   echo "Generating sogo.conf from /etc/sogo/sogo.conf.d YAML files..."
-  . /opt/config_parser.sh
-  GenerateConfigFile
+  /opt/config-generator
 fi
 
 # Enforce owner+mode on configuration

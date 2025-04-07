@@ -1,3 +1,12 @@
+FROM golang:1.24 as generator_builder
+WORKDIR /app
+
+COPY ./config-generator/go.mod ./config-generator/go.sum ./
+RUN go mod tidy
+COPY ./config-generator/. .
+
+RUN go test -v ./... && go build -o config-generator
+
 FROM debian:bookworm AS builder
 
 ARG SOGO_VERSION
@@ -108,6 +117,7 @@ COPY --from=builder /usr/local/sbin/ /usr/local/sbin/
 COPY --from=builder /usr/local/lib/ /usr/local/lib/
 COPY --from=builder /tmp/SOGo/Scripts/ /usr/share/doc/sogo/
 COPY --from=builder /tmp/SOGo/Apache/SOGo.conf /etc/apache2/conf-available/SOGo.conf
+COPY --from=generator_builder /app/config-generator /opt/config-generator
 
 COPY scripts/ /opt/
 
@@ -142,7 +152,8 @@ RUN a2enmod \
     mv /usr/share/doc/sogo/logrotate /etc/logrotate.d/sogo && \
     chmod +rx /usr/bin/yq && \
     chmod +rx /opt/entrypoint.sh && \
-    chmod +rx /opt/sogod.sh
+    chmod +rx /opt/sogod.sh && \
+    chmod +x /opt/config-generator
 
 # start from config folder
 WORKDIR /etc/sogo
