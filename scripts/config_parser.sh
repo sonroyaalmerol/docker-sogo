@@ -26,7 +26,12 @@ ParsePrimitives() {
     elif echo "$value" | grep -qE '^[0-9]+$'; then
       echo -n "$value"
     else
-      echo -n "\"$value\""
+      # Ensure quotes are handled correctly, especially if value already has them
+      if [[ "$value" == \"*\" || "$value" == \'*\' ]]; then
+        echo -n "$value"
+      else
+        echo -n "\"$value\""
+      fi
     fi
 }
 
@@ -36,53 +41,90 @@ ParseValues() {
   local level="$3"
 
   local value
-  value=$(yq "$path" "$yamlPath")
+  # Use -r to get raw scalar value, prevents yq adding quotes sometimes
+  value=$(yq -r "$path" "$yamlPath")
   local valueType
   valueType=$(yq "$path | type" "$yamlPath" | xargs)
 
   if [ "$valueType" = '!!seq' ]; then
+    # Sequence/Array handling
     Println $((level + 1)) "$key = ("
     local i=0
+    local firstItem=true
     while true; do
-      local item
-      item=$(yq "$path | .[$i]" "$yamlPath")
-      
-      if [ "$item" = "null" ]; then
-        break
+      # Check if item exists without relying on "null" string comparison
+      local itemExists
+      itemExists=$(yq "has(\"$path | .[$i]\")" "$yamlPath")
+
+      if [ "$itemExists" != "true" ]; then
+          break
       fi
 
-      if [ $i -ne 0 ]; then
-        Println 0 ","
+      local itemPath="$path | .[$i]"
+      local item
+      item=$(yq -r "$itemPath" "$yamlPath") # Use -r here too
+
+      if [ "$firstItem" = "false" ]; then
+        Println 0 "," # Comma before subsequent items
       fi
+      firstItem=false
 
       local itemType
-      itemType=$(yq "$path | .[$i] | type" "$yamlPath" | xargs)
+      itemType=$(yq "$itemPath | type" "$yamlPath" | xargs)
 
       if [ "$itemType" != '!!seq' ] && [ "$itemType" != '!!map' ]; then
+        # Primitive item in array
         Print $((level + 2)) "$(ParsePrimitives "$item")"
       else
-        ParseValues "$i" "$path | .[$i]" $((level + 1))
+        # Nested sequence or map item in array
+        # Pass the index 'i' as the key for the nested call
+        ParseValues "$i" "$itemPath" $((level + 1))
       fi
       i=$((i+1))
     done
-    
-    Println 0 ""
-    Println $((level + 1)) ");"
+
+    Println 0 "" # Newline after last item
+    Println $((level + 1)) ");" # Closing parenthesis and semicolon for the array assignment
   elif [ "$valueType" = '!!map' ]; then
+    # Map/Dictionary handling
     if echo "$key" | grep -qE '^[0-9]+$'; then
+      # Map is an element in an array (key is numeric index)
       Println $((level + 1)) "{"
     else
+      # Map is assigned to a named key
       Println $((level + 1)) "$key = {"
     fi
-    
+
+    # Process sub-keys
     yq "$path | keys | .[]" "$yamlPath" | while IFS= read -r subKey; do
+      # Pass the actual subKey for the recursive call
       ParseValues "$subKey" "$path | .$subKey" $((level + 1))
     done
-    Print $((level + 1)) "}"
-  elif [ "$valueType" = '!!str' ] || [ "$valueType" = '!!int' ] || [ "$valueType" = '!!bool' ]; then
-    Println $((level + 1)) "$key = $(ParsePrimitives "$value");"
+
+    # Check again if the key was numeric to decide on the closing brace format
+    if echo "$key" | grep -qE '^[0-9]+$'; then
+      # Map was an element in an array, just close the brace.
+      # The comma or closing parenthesis is handled by the !!seq logic above.
+      Print $((level + 1)) "}"
+    else
+      # Map was assigned to a named key, close brace and add semicolon.
+      Println $((level + 1)) "};"
+    fi
+
+  elif [ "$valueType" = '!!str' ] || [ "$valueType" = '!!int' ] || [ "$valueType" = '!!bool' ] || [ "$valueType" = '!!null' ]; then
+    # Primitive value assignment
+    # Handle null explicitly if needed, otherwise treat as empty string or skip?
+    # For plist, assigning null might not be standard, often omitted.
+    # Let's assume null means skip or handle as empty string.
+    if [ "$valueType" != '!!null' ]; then
+        Println $((level + 1)) "$key = $(ParsePrimitives "$value");"
+    # else
+        # Optionally handle null, e.g., print a comment or skip
+        # Println $((level + 1)) "/* $key = null; */"
+    fi
   else
-    Println $((level + 1)) "/* Invalid type for $value: $valueType */"
+    # Unknown type
+    Println $((level + 1)) "/* Invalid type for $key ($path): $valueType */"
   fi
 }
 
@@ -97,42 +139,71 @@ GenerateConfigFile() {
   # Reset config file
   > "$configPath"
 
+  # Merge YAML files
   yq eval-all \
     '. as $item ireduce ({}; . * $item )' \
     "$customConfigFolder"*".yaml" > "$yamlPath"
 
+  # Check if merge was successful (yamlPath exists and is not empty)
+  if [ ! -s "$yamlPath" ]; then
+      echo "Error: Failed to merge YAML files or result is empty." >&2
+      # Optionally write an error message into the config file
+      echo "{ /* Error: Failed to generate configuration from YAML files. */ }" > "$configPath"
+      return 1
+  fi
+
+
   disclaimerMessage=$(cat <<EOF
-  /* *********************  Main SOGo configuration file  **********************
-  *                                                                           *
-  * This configuration is AUTOGENERATED by the Docker container based on the  *
-  * YAML files provided in /etc/sogo/sogo.conf.d/.                            *
-  *                                                                           *
-  * YAML configurations is only applicable for this specific container.       *
-  *                                                                           *
-  * The script inside the container merges the YAML files in the directory    *
-  * and converts the merged config into OpenStep plist format.                *
-  *                                                                           *
-  * Since the content of this file is a dictionary in OpenStep plist format,  *
-  * the curly braces enclosing the body of the configuration are mandatory.   *
-  * See the Installation Guide for details on the format.                     *
-  *                                                                           *
-  * C and C++ style comments are supported.                                   *
-  *                                                                           *
-  * This example configuration contains only a subset of all available        *
-  * configuration parameters. Please see the installation guide more details. *
-  *                                                                           *
-  * ~sogo/GNUstep/Defaults/.GNUstepDefaults has precedence over this file,    *
-  * make sure to move it away to avoid unwanted parameter overrides.          *
-  *                                                                           *
-  * **************************************************************************/
+/* *********************  Main SOGo configuration file  **********************
+ *                                                                           *
+ * This configuration is AUTOGENERATED by the Docker container based on the  *
+ * YAML files provided in /etc/sogo/sogo.conf.d/.                            *
+ *                                                                           *
+ * YAML configurations is only applicable for this specific container.       *
+ *                                                                           *
+ * The script inside the container merges the YAML files in the directory    *
+ * and converts the merged config into OpenStep plist format.                *
+ *                                                                           *
+ * Since the content of this file is a dictionary in OpenStep plist format,  *
+ * the curly braces enclosing the body of the configuration are mandatory.   *
+ * See the Installation Guide for details on the format.                     *
+ *                                                                           *
+ * C and C++ style comments are supported.                                   *
+ *                                                                           *
+ * This example configuration contains only a subset of all available        *
+ * configuration parameters. Please see the installation guide more details. *
+ *                                                                           *
+ * ~sogo/GNUstep/Defaults/.GNUstepDefaults has precedence over this file,    *
+ * make sure to move it away to avoid unwanted parameter overrides.          *
+ *                                                                           *
+ * **************************************************************************/
 EOF
 )
 
   Println 0 "{"
-  Println 0 "$disclaimerMessage"
-  Println 0 ""
+  while IFS= read -r line; do
+      Println 1 "$line"
+  done <<< "$disclaimerMessage"
+  Println 0 "" # Add a blank line after disclaimer
+
   yq 'keys | .[]' "$yamlPath" | sort -u | while IFS= read -r rootKey; do
     ParseValues "$rootKey" ".$rootKey" 0
   done
-  Print 0 "}"
+
+  Println 0 "}"
 }
+
+# Ensure yq is available
+if ! command -v yq &> /dev/null; then
+    echo "Error: yq command not found. Please install yq (https://github.com/mikefarah/yq)." >&2
+    exit 1
+fi
+
+# Ensure custom config folder exists
+mkdir -p "$customConfigFolder"
+
+# Generate the config
+GenerateConfigFile
+
+echo "SOGo configuration generated at $configPath"
+exit 0
