@@ -1,3 +1,12 @@
+FROM golang:1.24 as tool_plus_builder 
+WORKDIR /app
+
+COPY ./sogo-tool-plus/go.mod ./sogo-tool-plus/go.sum ./
+RUN go mod tidy
+COPY ./sogo-tool-plus/. .
+
+RUN go build -o sogo-tool-plus ./cmd
+
 FROM golang:1.24 as generator_builder
 WORKDIR /app
 
@@ -118,6 +127,7 @@ COPY --from=builder /usr/local/lib/ /usr/local/lib/
 COPY --from=builder /tmp/SOGo/Scripts/ /usr/share/doc/sogo/
 COPY --from=builder /tmp/SOGo/Apache/SOGo.conf /etc/apache2/conf-available/SOGo.conf
 COPY --from=generator_builder /app/config-generator /opt/config-generator
+COPY --from=tool_plus_builder /app/sogo-tool-plus /usr/sbin/sogo-tool-plus
 
 COPY scripts/ /opt/
 
@@ -153,7 +163,8 @@ RUN a2enmod \
     chmod +rx /usr/bin/yq && \
     chmod +rx /opt/entrypoint.sh && \
     chmod +rx /opt/sogod.sh && \
-    chmod +x /opt/config-generator
+    chmod +x /opt/config-generator && \
+    chmod +x /usr/sbin/sogo-tool-plus
 
 # start from config folder
 WORKDIR /etc/sogo

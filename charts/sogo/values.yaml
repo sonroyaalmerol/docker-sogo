@@ -128,10 +128,12 @@ sogo:
 
   # Session cleanup - runs every minute
   #   - Adjust the maxInactivity (in minutes) parameter to suit your needs
+  #   - Adjust the durationLimit (in minutes) parameter to suit your needs
   # Default: Sessions without activity since 60 minutes will be dropped:
   sessionCleanup:
     enabled: false
     maxInactivity: 60
+    durationLimit: 480
 
   # Email alarms - runs every minutes
   # If you need to use SMTP AUTH for outgoing mails, specify credentials to use

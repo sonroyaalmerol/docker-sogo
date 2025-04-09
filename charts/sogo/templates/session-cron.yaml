@@ -11,4 +11,5 @@ metadata:
 data:
   cron: |
     {{ (printf "* * * * * sogo  /usr/sbin/sogo-tool expire-sessions %d" (.Values.sogo.sessionCleanup.maxInactivity | int)) }}
+    {{ (printf "* * * * * sogo  /usr/sbin/sogo-tool-plus -mode cli -action expire-sessions-creation -duration %d" (.Values.sogo.sessionCleanup.durationLimit | int)) }}
 {{- end }}
