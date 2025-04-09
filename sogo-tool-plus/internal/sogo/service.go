@@ -54,59 +54,41 @@ func NewSogoService(configFile string) (*SogoService, error) {
 	}
 	log.Println("ACL database connection successful.")
 
-	if s.aclConfig.DSN == s.usersConfig.DSN &&
-		s.aclConfig.Driver == s.usersConfig.Driver {
-		log.Println("Using same database connection for Users.")
-		s.usersDB = s.aclDB
-	} else {
-		log.Printf(
-			"Connecting to Users database (%s driver, DSN: %s)...",
-			s.usersConfig.Driver,
-			s.usersConfig.DSN,
+	log.Printf(
+		"Connecting to Users database (%s driver, DSN: %s)...",
+		s.usersConfig.Driver,
+		s.usersConfig.DSN,
+	)
+	s.usersDB, err = sql.Open(s.usersConfig.Driver, s.usersConfig.DSN)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to open Users DB connection: %w",
+			err,
 		)
-		s.usersDB, err = sql.Open(s.usersConfig.Driver, s.usersConfig.DSN)
-		if err != nil {
-			s.aclDB.Close()
-			return nil, fmt.Errorf(
-				"failed to open Users DB connection: %w",
-				err,
-			)
-		}
-		if err := s.usersDB.Ping(); err != nil {
-			s.aclDB.Close()
-			s.usersDB.Close()
-			return nil, fmt.Errorf("failed to ping Users DB: %w", err)
-		}
-		log.Println("Users database connection successful.")
 	}
+	if err := s.usersDB.Ping(); err != nil {
+		s.usersDB.Close()
+		return nil, fmt.Errorf("failed to ping Users DB: %w", err)
+	}
+	log.Println("Users database connection successful.")
 
-	if s.aclConfig.DSN == s.sessionsConfig.DSN &&
-		s.aclConfig.Driver == s.sessionsConfig.Driver {
-		log.Println("Using same database connection for sessions.")
-		s.usersDB = s.sessionsDB
-	} else {
-		log.Printf(
-			"Connecting to Sessions database (%s driver, DSN: %s)...",
-			s.sessionsConfig.Driver,
-			s.sessionsConfig.DSN,
+	log.Printf(
+		"Connecting to Sessions database (%s driver, DSN: %s)...",
+		s.sessionsConfig.Driver,
+		s.sessionsConfig.DSN,
+	)
+	s.sessionsDB, err = sql.Open(s.sessionsConfig.Driver, s.sessionsConfig.DSN)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to open Sessions DB connection: %w",
+			err,
 		)
-		s.sessionsDB, err = sql.Open(s.sessionsConfig.Driver, s.sessionsConfig.DSN)
-		if err != nil {
-			s.aclDB.Close()
-			s.usersDB.Close()
-			return nil, fmt.Errorf(
-				"failed to open Sessions DB connection: %w",
-				err,
-			)
-		}
-		if err := s.sessionsDB.Ping(); err != nil {
-			s.aclDB.Close()
-			s.usersDB.Close()
-			s.sessionsDB.Close()
-			return nil, fmt.Errorf("failed to ping Sessions DB: %w", err)
-		}
-		log.Println("Sessions database connection successful.")
 	}
+	if err := s.sessionsDB.Ping(); err != nil {
+		s.sessionsDB.Close()
+		return nil, fmt.Errorf("failed to ping Sessions DB: %w", err)
+	}
+	log.Println("Sessions database connection successful.")
 
 	return s, nil
 }
@@ -116,11 +98,11 @@ func (s *SogoService) Close() {
 		s.aclDB.Close()
 		log.Println("ACL database connection closed.")
 	}
-	if s.usersDB != nil && s.usersDB != s.aclDB {
+	if s.usersDB != nil {
 		s.usersDB.Close()
 		log.Println("Users database connection closed.")
 	}
-	if s.sessionsDB != nil && s.sessionsDB != s.aclDB {
+	if s.sessionsDB != nil {
 		s.sessionsDB.Close()
 		log.Println("Sessions database connection closed.")
 	}
