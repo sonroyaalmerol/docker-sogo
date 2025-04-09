@@ -9,10 +9,10 @@ import (
 func (s *SogoService) DeleteSessionsByCreation(maxDuration time.Duration) error {
 	latestAllowed := time.Now().Add(-maxDuration)
 
-	sqlStmt := fmt.Sprintf(
-		`DELETE FROM %s WHERE c_creationdate < $1`,
+	sqlStmt := s.sessionsConfig.normalize(fmt.Sprintf(
+		`DELETE FROM %s WHERE c_creationdate < ?`,
 		s.sessionsConfig.Table,
-	)
+	))
 	_, err := s.sessionsDB.Exec(sqlStmt, latestAllowed.Unix())
 	if err != nil {
 		log.Printf("Error removing sessions before '%v': %v", latestAllowed, err)

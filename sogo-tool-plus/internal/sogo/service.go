@@ -40,9 +40,8 @@ func NewSogoService(configFile string) (*SogoService, error) {
 	}
 
 	log.Printf(
-		"Connecting to ACL database (%s driver, DSN: %s)...",
+		"Connecting to ACL database (%s driver)...",
 		s.aclConfig.Driver,
-		s.aclConfig.DSN,
 	)
 	s.aclDB, err = sql.Open(s.aclConfig.Driver, s.aclConfig.DSN)
 	if err != nil {
@@ -55,9 +54,8 @@ func NewSogoService(configFile string) (*SogoService, error) {
 	log.Println("ACL database connection successful.")
 
 	log.Printf(
-		"Connecting to Users database (%s driver, DSN: %s)...",
+		"Connecting to Users database (%s driver)...",
 		s.usersConfig.Driver,
-		s.usersConfig.DSN,
 	)
 	s.usersDB, err = sql.Open(s.usersConfig.Driver, s.usersConfig.DSN)
 	if err != nil {
@@ -73,9 +71,8 @@ func NewSogoService(configFile string) (*SogoService, error) {
 	log.Println("Users database connection successful.")
 
 	log.Printf(
-		"Connecting to Sessions database (%s driver, DSN: %s)...",
+		"Connecting to Sessions database (%s driver)...",
 		s.sessionsConfig.Driver,
-		s.sessionsConfig.DSN,
 	)
 	s.sessionsDB, err = sql.Open(s.sessionsConfig.Driver, s.sessionsConfig.DSN)
 	if err != nil {
@@ -206,10 +203,10 @@ func parseSogoDSN(sogoURL string) (DBConfig, error) {
 
 func (s *SogoService) userProfileExists(uid string) (bool, error) {
 	var foundUid string
-	sqlStmt := fmt.Sprintf(
-		`SELECT c_uid FROM %s WHERE c_uid = $1 LIMIT 1`,
+	sqlStmt := s.usersConfig.normalize(fmt.Sprintf(
+		`SELECT c_uid FROM %s WHERE c_uid = ? LIMIT 1`,
 		s.usersConfig.Table,
-	)
+	))
 	err := s.usersDB.QueryRow(sqlStmt, uid).Scan(&foundUid)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -230,10 +227,10 @@ func (s *SogoService) userProfileExists(uid string) (bool, error) {
 }
 
 func (s *SogoService) initializeUserProfile(uid string) error {
-	sqlStmt := fmt.Sprintf(
-		`INSERT INTO %s (c_uid, c_settings) VALUES ($1, $2)`,
+	sqlStmt := s.usersConfig.normalize(fmt.Sprintf(
+		`INSERT INTO %s (c_uid, c_settings) VALUES (?, ?)`,
 		s.usersConfig.Table,
-	)
+	))
 	_, err := s.usersDB.Exec(sqlStmt, uid, `{"Calendar": {}}`)
 	if err != nil {
 		log.Printf("Error initializing user profile for '%s': %v", uid, err)

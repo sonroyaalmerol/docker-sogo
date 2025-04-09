@@ -30,11 +30,11 @@ func (s *SogoService) CalSubscribeUser(uid string) error {
 		log.Printf("User profile for '%s' already exists.", uid)
 	}
 
-	sqlStmt := fmt.Sprintf(`
+	sqlStmt := s.aclConfig.normalize(fmt.Sprintf(`
         SELECT DISTINCT c_object
         FROM %s
-        WHERE c_object LIKE $1 AND (c_uid = $2 OR c_uid = $3) AND c_role <> $4
-    `, s.aclConfig.Table)
+        WHERE c_object LIKE ? AND (c_uid = ? OR c_uid = ?) AND c_role <> ?
+    `, s.aclConfig.Table))
 
 	rows, err := s.aclDB.Query(
 		sqlStmt,
@@ -120,11 +120,11 @@ func (s *SogoService) CalSubscribeAll() error {
 		return nil
 	}
 
-	sqlStmt := fmt.Sprintf(`
+	sqlStmt := s.aclConfig.normalize(fmt.Sprintf(`
         SELECT c_object, c_uid
         FROM %s
-        WHERE c_object LIKE $1 AND c_role <> $2
-    `, s.aclConfig.Table)
+        WHERE c_object LIKE ? AND c_role <> ?
+    `, s.aclConfig.Table))
 	rows, err := s.aclDB.Query(sqlStmt, "%Calendar%", "None")
 	if err != nil {
 		log.Printf("Error querying all relevant ACLs: %v", err)
