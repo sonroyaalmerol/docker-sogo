@@ -126,9 +126,9 @@ func readSogoConfig(filePath string) (*SOGoConfig, error) {
 		return nil, fmt.Errorf("could not decode plist config: %w", err)
 	}
 
-	if sogoConfig.ACLDbUrl == "" || sogoConfig.UsersDbUrl == "" {
+	if sogoConfig.ACLDbUrl == "" || sogoConfig.UsersDbUrl == "" || sogoConfig.SessionsDbUrl == "" {
 		return nil, errors.New(
-			"OCSAclURL or SOGoProfileURL missing in config",
+			"OCSAclURL, SOGoProfileURL, or OCSSessionsFolderURL missing in config",
 		)
 	}
 
