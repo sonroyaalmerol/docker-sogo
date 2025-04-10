@@ -25,7 +25,7 @@ func (h *WebHandler) HandleCalSubscribeUser(w http.ResponseWriter, r *http.Reque
 	}
 
 	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(parts) != 3 || parts[1] != "user" {
+	if len(parts) != 4 || parts[2] != "user" {
 		http.Error(
 			w,
 			"Invalid URL path. Use /calendars/subscribe/user/{uid}",
@@ -33,7 +33,7 @@ func (h *WebHandler) HandleCalSubscribeUser(w http.ResponseWriter, r *http.Reque
 		)
 		return
 	}
-	uid := parts[2]
+	uid := parts[3]
 	if uid == "" {
 		http.Error(w, "User UID cannot be empty", http.StatusBadRequest)
 		return
