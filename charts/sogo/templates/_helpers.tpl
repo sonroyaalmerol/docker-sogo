@@ -89,8 +89,8 @@ SOGoUserSources:
 {{- $db_type := $parts._0 -}}
 {{- $remaining := $parts._1 -}}
 {{- $parts = split "/" $remaining -}}
-{{- $base_url = split "@" $parts._0 -}}
-{{- $host = split ":" $base_url._1 -}}
+{{- $base_url := split "@" $parts._0 -}}
+{{- $host := split ":" $base_url._1 -}}
 {{- printf "%s" $host._0 -}}
 {{- end -}}
 {{- end -}}
@@ -101,8 +101,8 @@ SOGoUserSources:
 {{- $db_type := $parts._0 -}}
 {{- $remaining := $parts._1 -}}
 {{- $parts = split "/" $remaining -}}
-{{- $base_url = split "@" $parts._0 -}}
-{{- $host = split ":" $base_url._1 -}}
+{{- $base_url := split "@" $parts._0 -}}
+{{- $host := split ":" $base_url._1 -}}
 {{- printf "%s" $host._1 -}}
 {{- end -}}
 {{- end -}}
@@ -113,8 +113,8 @@ SOGoUserSources:
 {{- $db_type := $parts._0 -}}
 {{- $remaining := $parts._1 -}}
 {{- $parts = split "/" $remaining -}}
-{{- $base_url = split "@" $parts._0 -}}
-{{- $auth = split ":" $base_url._0 -}}
+{{- $base_url := split "@" $parts._0 -}}
+{{- $auth := split ":" $base_url._0 -}}
 {{- printf "%s" $auth._0 -}}
 {{- end -}}
 {{- end -}}
@@ -125,8 +125,8 @@ SOGoUserSources:
 {{- $db_type := $parts._0 -}}
 {{- $remaining := $parts._1 -}}
 {{- $parts = split "/" $remaining -}}
-{{- $base_url = split "@" $parts._0 -}}
-{{- $auth = split ":" $base_url._0 -}}
+{{- $base_url := split "@" $parts._0 -}}
+{{- $auth := split ":" $base_url._0 -}}
 {{- printf "%s" $auth._1 -}}
 {{- end -}}
 {{- end -}}
