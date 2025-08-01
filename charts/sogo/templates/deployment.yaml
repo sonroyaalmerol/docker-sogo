@@ -35,9 +35,9 @@ spec:
         {{ template "sogo.memcached.fullname" . }}-client: "true"
         {{- end }}
         {{- if .Values.mariadb.enabled }}
-        {{ template "sogo.memcached.fullname" . }}-client: "true"
+        {{ template "sogo.mariadb.fullname" . }}-client: "true"
         {{- else if .Values.postgresql.enabled }}
-        {{ template "sogo.memcached.fullname" . }}-client: "true"
+        {{ template "sogo.postgresql.fullname" . }}-client: "true"
         {{- end }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
@@ -329,9 +329,9 @@ spec:
                   name: {{ printf "%s-db" .Release.Name }}
                   key: db-password
             - name: MYSQL_HOST
-              value: {{ include "sogo.db.parsed.hostname" . | default (printf "%s-mariadb" .Release.Name) }}
+              value: {{ include "sogo.mariadb.fullname" . }}
             - name: MYSQL_PORT
-              value: {{ include "sogo.db.parsed.port" . | default "3306" | quote }}
+              value: {{ include "sogo.db.parsed.port" . | default (ternary "3306" "" .Values.mariadb.enabled) | quote }}
           command:
             - "sh"
             - "-c"
@@ -346,9 +346,9 @@ spec:
                   name: {{ printf "%s-db" .Release.Name }}
                   key: db-username
             - name: POSTGRES_HOST
-              value: {{ include "sogo.db.parsed.hostname" . | default (include "postgresql.v1.primary.fullname" .Subcharts.postgresql) }}
+              value: {{ include "sogo.postgresql.fullname" . }}
             - name: POSTGRES_PORT
-              value: {{ include "sogo.db.parsed.port" . | default "5432" | quote }}
+              value: {{ include "sogo.db.parsed.port" . | default (ternary "5432" "" .Values.postgresql.enabled) | quote }}
           command:
             - "sh"
             - "-c"

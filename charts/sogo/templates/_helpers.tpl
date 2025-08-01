@@ -133,13 +133,13 @@ SOGoUserSources:
 
 {{- define "sogo.mariadb.fullname" -}}
 {{- if or .Values.mariadb.enabled (eq (include "sogo.db.parsed.type" .) "mysql") -}}
-{{- include "sogo.db.parsed.hostname" . | default (printf "%s-mariadb" .Release.Name) -}}
+{{- include "sogo.db.parsed.hostname" . | default (ternary (printf "%s-mariadb" .Release.Name) "" .Values.mariadb.enabled) -}}
 {{- end -}}
 {{- end -}}
 
 {{- define "sogo.postgresql.fullname" -}}
 {{- if or .Values.postgresql.enabled (eq (include "sogo.db.parsed.type" .) "postgresql") -}}
-{{- include "sogo.db.parsed.hostname" . | default (include "postgresql.v1.primary.fullname" .Subcharts.postgresql) -}}
+{{- include "sogo.db.parsed.hostname" . | default (ternary (include "postgresql.v1.primary.fullname" .Subcharts.postgresql) "" .Values.postgresql.enabled) -}}
 {{- end -}}
 {{- end -}}
 
