@@ -142,6 +142,7 @@ RUN a2enmod \
     ldconfig && \
     groupadd --system sogo && \
     useradd --system --gid sogo sogo && \
+    mkdir -p /usr/lib/GNUstep/Libraries/Resources && \
     (ln -s /usr/local/lib/GNUstep/* /usr/lib/GNUstep/ || :) && \
     ln -s /usr/local/lib/GNUstep/Libraries/Resources /usr/lib/GNUstep/Libraries/Resources && \
     ln -s /usr/local/sbin/sogo-tool /usr/sbin/sogo-tool && \
