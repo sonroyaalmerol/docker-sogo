@@ -58,6 +58,8 @@ RUN apt-get update -y && \
         libsodium-dev \
         libzip-dev && \
     rm -rf /var/lib/apt/lists/* && \
+    ln -s /usr/include/libwbxml-1.1 /usr/include/libwbxml-1.0 && \
+    ln -s /usr/include/libwbxml-1.1 /usr/include/libwbxml && \
     mkdir /tmp/SOGo && \
     mkdir /tmp/SOPE && \
     tar xf /tmp/SOGo.tar.gz -C /tmp/SOGo --strip-components 1 && \
@@ -142,7 +144,7 @@ RUN a2enmod \
     ldconfig && \
     groupadd --system sogo && \
     useradd --system --gid sogo sogo && \
-    mkdir -p /usr/lib/GNUstep/Libraries/Resources && \
+    mkdir -p /usr/lib/GNUstep && \
     (ln -s /usr/local/lib/GNUstep/* /usr/lib/GNUstep/ || :) && \
     ln -s /usr/local/lib/GNUstep/Libraries/Resources /usr/lib/GNUstep/Libraries/Resources && \
     ln -s /usr/local/sbin/sogo-tool /usr/sbin/sogo-tool && \
