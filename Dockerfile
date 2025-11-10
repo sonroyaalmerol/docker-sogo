@@ -72,6 +72,9 @@ RUN apt-get update -y && \
     ./configure --enable-debug --disable-strip --enable-saml2 \
         --enable-mfa --enable-sodium && \
     make && \
+    make install && \
+    cd ActiveSync && \
+    make && \
     make install
 
 FROM debian:trixie-slim
