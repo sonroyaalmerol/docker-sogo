@@ -16,7 +16,7 @@ COPY ./config-generator/. .
 
 RUN go test -v ./... && go build -o config-generator
 
-FROM debian:bookworm AS builder
+FROM debian:trixie AS builder
 
 ARG SOGO_VERSION
 
@@ -52,7 +52,7 @@ RUN apt-get update -y && \
         libexpat1-dev \
         libpopt-dev \
         libsbjson-dev \
-        libsbjson2.3 \
+        libsbjson2.3t64 \
         libcurl4 \
         liboath-dev \
         libsodium-dev \
@@ -72,7 +72,7 @@ RUN apt-get update -y && \
     make && \
     make install
 
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 ARG TARGETARCH
 
@@ -98,17 +98,17 @@ RUN apt-get update -y && \
         libcrypt1 \
         libcurl4 \
         libgcc-s1 \
-        libglib2.0-0 \
-        libgnustep-base1.28 \
+        libglib2.0-0t64 \
+        libgnustep-base1.31 \
         libgnutls30 \
         liblasso3 \
-        libldap-2.5-0 \
+        libldap2 \
         libmariadb3 \
-        libmemcached11 \
+        libmemcached11t64 \
         liboath0 \
         libobjc4 \
         libpq5 \
-        libsbjson2.3 \
+        libsbjson2.3t64 \
         libsodium23 \
         libssl3 \
         libwbxml2-1 \
