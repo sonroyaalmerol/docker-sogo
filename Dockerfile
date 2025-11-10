@@ -114,7 +114,7 @@ RUN apt-get update -y && \
         libwbxml2-1 \
         libxml2 \
         libytnef0 \
-        libzip4 \
+        libzip5 \
         tmpreaper \
         zip \
         zlib1g && \
