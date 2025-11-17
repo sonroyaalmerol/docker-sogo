@@ -72,10 +72,7 @@ RUN apt-get update -y && \
     ./configure --enable-debug --disable-strip --enable-saml2 \
         --enable-mfa --enable-sodium
 
-COPY patches/disable-password-cache.diff /tmp/SOGo/disable-password-cache.diff
-RUN set -euo pipefail; \
-    cd /tmp/SOGo && \
-    patch -p1 < ./disable-password-cache.diff
+COPY patches/SOGoUserManager.m /tmp/SOGo/SoObjects/SOGo/SOGoUserManager.m
 
 RUN cd /tmp/SOGo && \
     make && \
