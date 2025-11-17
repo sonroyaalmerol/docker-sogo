@@ -70,7 +70,14 @@ RUN apt-get update -y && \
     make install && \
     cd /tmp/SOGo && \
     ./configure --enable-debug --disable-strip --enable-saml2 \
-        --enable-mfa --enable-sodium && \
+        --enable-mfa --enable-sodium
+
+COPY patches/disable-password-cache.diff /tmp/disable-password-cache.diff
+RUN set -euo pipefail; \
+    cd /tmp/SOGo && \
+    patch -p1 --forward --reject-file=- < /tmp/disable-password-cache.diff
+
+RUN cd /tmp/SOGo && \
     make && \
     make install && \
     cd ActiveSync && \
