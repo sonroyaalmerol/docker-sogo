@@ -75,7 +75,7 @@ RUN apt-get update -y && \
 COPY patches/disable-password-cache.diff /tmp/disable-password-cache.diff
 RUN set -euo pipefail; \
     cd /tmp/SOGo && \
-    patch -p1 --forward --reject-file=- < /tmp/disable-password-cache.diff
+    patch -p1 < /tmp/disable-password-cache.diff
 
 RUN cd /tmp/SOGo && \
     make && \
