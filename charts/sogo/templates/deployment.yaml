@@ -77,12 +77,8 @@ spec:
           {{- with .Values.livenessProbe }}
           {{- if .enabled }}
           livenessProbe:
-            httpGet:
-              path: /SOGo
-              port:  {{ $.Values.sogo.containerPort }}
-              httpHeaders:
-              - name: Host
-                value: {{ $.Values.sogo.host | quote }}
+            exec:
+              command: ["/bin/sh", "-c", "curl -s -o /dev/null -w \"%{http_code}\" http://localhost/SOGo | grep -E \"^(2|3)[0-9]{2}$\""]
             initialDelaySeconds: {{ .initialDelaySeconds }}
             periodSeconds: {{ .periodSeconds }}
             timeoutSeconds: {{ .timeoutSeconds }}
@@ -93,12 +89,8 @@ spec:
           {{- with .Values.readinessProbe }}
           {{- if .enabled }}
           readinessProbe:
-            httpGet:
-              path: /SOGo
-              port:  {{ $.Values.sogo.containerPort }}
-              httpHeaders:
-              - name: Host
-                value: {{ $.Values.sogo.host | quote }}
+            exec:
+              command: ["/bin/sh", "-c", "curl -s -o /dev/null -w \"%{http_code}\" http://localhost/SOGo | grep -E \"^(2|3)[0-9]{2}$\""]
             initialDelaySeconds: {{ .initialDelaySeconds }}
             periodSeconds: {{ .periodSeconds }}
             timeoutSeconds: {{ .timeoutSeconds }}
@@ -109,12 +101,8 @@ spec:
           {{- with .Values.startupProbe }}
           {{- if .enabled }}
           startupProbe:
-            httpGet:
-              path: /SOGo
-              port:  {{ $.Values.sogo.containerPort }}
-              httpHeaders:
-              - name: Host
-                value: {{ $.Values.sogo.host | quote }}
+            exec:
+              command: ["/bin/sh", "-c", "curl -s -o /dev/null -w \"%{http_code}\" http://localhost/SOGo | grep -E \"^(2|3)[0-9]{2}$\""]
             initialDelaySeconds: {{ .initialDelaySeconds }}
             periodSeconds: {{ .periodSeconds }}
             timeoutSeconds: {{ .timeoutSeconds }}
