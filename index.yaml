@@ -4,6 +4,54 @@ entries:
   - annotations:
       artifacthub.io/images: |
         - name: docker-sogo
+          image: sonroyaalmerol/docker-sogo:5.12.4-2
+      artifacthub.io/license: MIT
+      artifacthub.io/links: |
+        - name: GitHub source
+          url: https://github.com/sonroyaalmerol/docker-sogo/
+      artifacthub.io/screenshots: |
+        - title: SOGo
+          url: https://www.sogo.nu/img/screenshot.png
+    apiVersion: v2
+    appVersion: 5.12.4
+    created: "2025-11-19T19:26:48.949784973Z"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 15.3.*
+    - condition: mariadb.enabled
+      name: mariadb
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 18.0.*
+    - condition: memcached.enabled
+      name: memcached
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 7.0.*
+    description: A helm chart for the docker-sogo docker image
+    digest: 6f7ac8f81411e1e4e930f3a9f568d99db39584ae4ca502ef20d72cc481e895f7
+    home: https://github.com/sonroyaalmerol/docker-sogo
+    icon: https://www.sogo.nu/img/sogo.svg
+    keywords:
+    - sogo
+    - alinto
+    - inverse
+    - mail
+    - calendar
+    maintainers:
+    - email: sogo@snry.me
+      name: Son Roy Almerol
+      url: https://github.com/sonroyaalmerol
+    name: sogo
+    sources:
+    - https://github.com/sonroyaalmerol/docker-sogo
+    type: application
+    urls:
+    - https://github.com/sonroyaalmerol/docker-sogo/releases/download/chart-0.3.3/sogo-0.3.3.tgz
+    version: 0.3.3
+  - annotations:
+      artifacthub.io/images: |
+        - name: docker-sogo
           image: sonroyaalmerol/docker-sogo:5.12.3-1
       artifacthub.io/license: MIT
       artifacthub.io/links: |
@@ -913,4 +961,4 @@ entries:
     urls:
     - https://github.com/sonroyaalmerol/docker-sogo/releases/download/chart-0.1.0/sogo-0.1.0.tgz
     version: 0.1.0
-generated: "2025-08-01T01:53:02.492739738Z"
+generated: "2025-11-19T19:26:48.949923393Z"
