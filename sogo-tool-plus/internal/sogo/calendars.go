@@ -70,6 +70,15 @@ func (s *SogoService) CalSubscribeUser(uid string) error {
 			continue
 		}
 
+		if owner == uid {
+			log.Printf(
+				"Skipping self-subscription for user '%s' to calendar '%s'",
+				uid,
+				parsedPath,
+			)
+			continue
+		}
+
 		err = runSogoTool(
 			"manage-acl",
 			"subscribe",
