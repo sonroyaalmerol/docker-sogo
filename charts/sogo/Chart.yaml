@@ -26,7 +26,7 @@ annotations:
       url: https://github.com/sonroyaalmerol/docker-sogo/
   artifacthub.io/images: |
     - name: docker-sogo
-      image: sonroyaalmerol/docker-sogo:5.12.4-2
+      image: sonroyaalmerol/docker-sogo:5.12.4-3
   artifacthub.io/screenshots: |
     - title: SOGo
       url: https://www.sogo.nu/img/screenshot.png
