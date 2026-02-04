@@ -45,7 +45,6 @@ ingress:
   path: /
   pathType: Prefix
 
-
 # Allow configuration of lifecycle hooks
 # ref: https://kubernetes.io/docs/tasks/configure-pod-container/attach-handler-lifecycle-event/
 lifecycle: {}
@@ -119,7 +118,7 @@ sogo:
   # Vacation messages expiration
   vacationExpiration:
     enabled: false
-    schedule: '*/5 * * * *'
+    schedule: "*/5 * * * *"
     sieve: {}
       # username: 'sieve-admin-username'
       # password: 'sieve-admin-password'
@@ -169,6 +168,12 @@ sogo:
 
       accessMode: ReadWriteOnce
       size: 8Gi
+
+  # Auto subscribe all users to collections they have access to
+  # Mainly for calendars
+  autoSubscribeAllUsers:
+    enabled: false
+    schedule: "*/5 * * * *"
 
   ## Strategy used to replace old pods
   ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
@@ -343,7 +348,6 @@ memcached:
   ## Only enable this if you don't have an external database
   enabled: true
 
-
 ## Enable pod autoscaling using HorizontalPodAutoscaler
 ## ref: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
 ##
@@ -365,7 +369,6 @@ rbac:
     create: true
     name: sogo-serviceaccount
     annotations: {}
-
 
 ## @param securityContext for sogo pod @deprecated Use `sogo.podSecurityContext` instead
 securityContext: {}

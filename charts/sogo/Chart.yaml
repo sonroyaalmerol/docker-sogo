@@ -1,21 +1,21 @@
 apiVersion: v2
 name: sogo
-version: 0.3.3
+version: 0.3.4
 description: A helm chart for the docker-sogo docker image
 type: application
 keywords:
-- sogo
-- alinto
-- inverse
-- mail
-- calendar
+  - sogo
+  - alinto
+  - inverse
+  - mail
+  - calendar
 home: https://github.com/sonroyaalmerol/docker-sogo
 sources:
-- https://github.com/sonroyaalmerol/docker-sogo
+  - https://github.com/sonroyaalmerol/docker-sogo
 maintainers:
-- name: Son Roy Almerol
-  email: sogo@snry.me
-  url: https://github.com/sonroyaalmerol
+  - name: Son Roy Almerol
+    email: sogo@snry.me
+    url: https://github.com/sonroyaalmerol
 icon: https://www.sogo.nu/img/sogo.svg
 appVersion: 5.12.4
 deprecated: false

@@ -162,6 +162,12 @@ spec:
               subPath: cron
               readOnly: true
             {{- end }}
+            {{- if .Values.sogo.autoSubscribeAllUsers.enabled }}
+            - name: sogo-subscribe-users-cron
+              mountPath: /etc/cron.d/sogo-subscribe-users
+              subPath: cron
+              readOnly: true
+            {{- end }}
             {{- if .Values.sogo.theme.js }}
             - name: sogo-custom-theme
               mountPath: /usr/local/lib/GNUstep/SOGo/WebServerResources/js/helm-theme.js
@@ -379,6 +385,11 @@ spec:
         - name: sogo-oidc-cron
           configMap:
             name: {{ template "sogo.fullname" . }}-oidc-cron
+        {{- end }}
+        {{- if .Values.sogo.autoSubscribeAllUsers.enabled }}
+        - name: sogo-subscribe-users-cron
+          configMap:
+            name: {{ template "sogo.fullname" . }}-subscribe-users-cron
         {{- end }}
         {{- if .Values.sogo.backup.enabled }}
         - name: sogo-backup-cron
