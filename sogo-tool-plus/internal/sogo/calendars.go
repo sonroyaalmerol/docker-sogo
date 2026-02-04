@@ -114,20 +114,18 @@ func (s *SogoService) CalSubscribeUser(uid string) error {
 	return nil
 }
 
+type subscription struct {
+	owner        string
+	parsedPath   string
+	user         string
+	calendarPath string
+}
+
 func (s *SogoService) CalSubscribeAll() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	log.Println("Starting subscription process for all users...")
-
-	users, err := s.getAllUsers()
-	if err != nil {
-		return fmt.Errorf("failed to get all users for subscription: %w", err)
-	}
-	if len(users) == 0 {
-		log.Println("No users found to subscribe.")
-		return nil
-	}
 
 	sqlStmt := s.aclConfig.normalize(fmt.Sprintf(`
         SELECT c_object, c_uid
@@ -141,7 +139,7 @@ func (s *SogoService) CalSubscribeAll() error {
 	}
 	defer rows.Close()
 
-	subscriptionsNeeded := make(map[string]map[string]bool)
+	var subscriptions []subscription
 
 	for rows.Next() {
 		var cObject, cUid string
@@ -155,38 +153,36 @@ func (s *SogoService) CalSubscribeAll() error {
 
 		if cObject == "" {
 			log.Printf(
-				"Skipping invalid calendar path derived from: %s",
+				"Skipping invalid calendar path: %s",
 				cObject,
 			)
 			continue
 		}
 
-		if _, ok := subscriptionsNeeded[cObject]; !ok {
-			subscriptionsNeeded[cObject] = make(map[string]bool)
+		owner, parsedPath, err := utils.ParsePath(cObject)
+		if err != nil {
+			log.Printf(
+				"Failed to parse calendar path: %v",
+				err,
+			)
+			continue
 		}
 
-		if cUid == "<default>" {
-			for _, user := range users {
-				subscriptionsNeeded[cObject][user] = true
-			}
-		} else {
-			userExists := false
-			for _, u := range users {
-				if u == cUid {
-					userExists = true
-					break
-				}
-			}
-			if userExists {
-				subscriptionsNeeded[cObject][cUid] = true
-			} else {
-				log.Printf(
-					"ACL found for user '%s' but user not in users table, skipping subscription for calendar '%s'",
-					cUid,
-					cObject,
-				)
-			}
+		if owner == cUid {
+			log.Printf(
+				"Skipping self-subscription for user '%s' to calendar '%s'",
+				cUid,
+				parsedPath,
+			)
+			continue
 		}
+
+		subscriptions = append(subscriptions, subscription{
+			owner:        owner,
+			parsedPath:   parsedPath,
+			user:         cUid,
+			calendarPath: cObject,
+		})
 	}
 	if err := rows.Err(); err != nil {
 		log.Printf("Error iterating ACL rows during cal-subscribe-all: %v", err)
@@ -196,38 +192,31 @@ func (s *SogoService) CalSubscribeAll() error {
 		)
 	}
 
+	if len(subscriptions) == 0 {
+		log.Println("No subscriptions found to process.")
+		return nil
+	}
+
 	totalSubscriptions := 0
 	totalFailures := 0
-	for calendarPath, usersToCalSubscribe := range subscriptionsNeeded {
-		for user := range usersToCalSubscribe {
-			owner, parsedPath, err := utils.ParsePath(calendarPath)
-			if err != nil {
-				log.Printf(
-					"Failed to parse calendar path: %v",
-					err,
-				)
-				totalFailures++
-				continue
-			}
-
-			err = runSogoTool(
-				"manage-acl",
-				"subscribe",
-				owner,
-				parsedPath,
-				user,
+	for _, sub := range subscriptions {
+		err = runSogoTool(
+			"manage-acl",
+			"subscribe",
+			sub.owner,
+			sub.parsedPath,
+			sub.user,
+		)
+		if err != nil {
+			log.Printf(
+				"Failed to subscribe user '%s' to calendar '%s': %v",
+				sub.user,
+				sub.calendarPath,
+				err,
 			)
-			if err != nil {
-				log.Printf(
-					"Failed to subscribe user '%s' to calendar '%s': %v",
-					user,
-					calendarPath,
-					err,
-				)
-				totalFailures++
-			} else {
-				totalSubscriptions++
-			}
+			totalFailures++
+		} else {
+			totalSubscriptions++
 		}
 	}
 

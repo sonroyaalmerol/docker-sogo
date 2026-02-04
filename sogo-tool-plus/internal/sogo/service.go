@@ -244,39 +244,6 @@ func (s *SogoService) initializeUserProfile(uid string) error {
 	return nil
 }
 
-func (s *SogoService) getAllUsers() ([]string, error) {
-	sqlStmt := fmt.Sprintf("SELECT c_uid FROM %s", s.usersConfig.Table)
-	rows, err := s.usersDB.Query(sqlStmt)
-	if err != nil {
-		log.Printf("Error querying all users: %v", err)
-		return nil, fmt.Errorf("database error getting all users: %w", err)
-	}
-	defer rows.Close()
-
-	users := make([]string, 0)
-	for rows.Next() {
-		var cUid string
-		if err := rows.Scan(&cUid); err != nil {
-			log.Printf("Error scanning user row: %v", err)
-			continue
-		}
-		cUid = strings.TrimSpace(cUid)
-		if cUid != "" {
-			users = append(users, cUid)
-		}
-	}
-	if err := rows.Err(); err != nil {
-		log.Printf("Error iterating user rows: %v", err)
-		return nil, fmt.Errorf(
-			"database iteration error getting all users: %w",
-			err,
-		)
-	}
-
-	log.Printf("Found %d users", len(users))
-	return users, nil
-}
-
 func runSogoTool(args ...string) error {
 	cmd := exec.Command("sogo-tool", args...)
 	log.Printf("Executing: %s", strings.Join(cmd.Args, " "))
