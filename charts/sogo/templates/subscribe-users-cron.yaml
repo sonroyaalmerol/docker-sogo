@@ -10,5 +10,5 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
   cron: |
-    {{ printf "%s sogo  /usr/sbin/sogo-tool-plus cal-subscribe-all" (.Values.sogo.autoSubscribeAllUsers.schedule | trim | default "*/5 * * * *") }}
+    {{ printf "%s sogo  /usr/sbin/sogo-tool-plus -mode cli -action cal-subscribe-all" (.Values.sogo.autoSubscribeAllUsers.schedule | trim | default "*/15 * * * *") }}
 {{- end }}
