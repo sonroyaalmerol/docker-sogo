@@ -119,20 +119,3 @@ index 0f658214d..ccbdc2db2 100644
    {
      //try to refresh
      if(self->accessToken)
-diff --git a/SoObjects/SOGo/SOGoUserManager.m b/SoObjects/SOGo/SOGoUserManager.m
-index ba53568d6..81771400d 100644
---- a/SoObjects/SOGo/SOGoUserManager.m
-+++ b/SoObjects/SOGo/SOGoUserManager.m
-@@ -723,10 +723,9 @@ static const NSString *kObfuscatedSecondaryEmailKey = @"obfuscatedSecondaryEmail
-     }
- 
-   dictPassword = (currentUser ? [currentUser objectForKey: @"password"] : nil);
--  if (useCache && currentUser && dictPassword)
-+  if (useCache && currentUser && dictPassword && [dictPassword isEqualToString: [_pwd asSHA1String]])
-     {
--      checkOK = ([dictPassword isEqualToString: [_pwd asSHA1String]]);
--      //NSLog(@"Password cache hit for user %@", _login);
-+      checkOK = YES;
-     }
-   else if ([self _sourceCheckLogin: _login
-                        andPassword: _pwd

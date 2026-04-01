@@ -71,9 +71,11 @@ RUN cd /tmp/SOPE && \
     make && \
     make install
 
-COPY patches/sogo-auth-fixes.patch /tmp/sogo-auth-fixes.patch
+COPY patches/ /tmp/patches/
 
-RUN patch -p1 -d /tmp/SOGo < /tmp/sogo-auth-fixes.patch && \
+RUN for p in $(ls /tmp/patches/*.patch | sort); do \
+        echo "Applying $p" && patch -p1 -d /tmp/SOGo < "$p"; \
+    done && \
     cd /tmp/SOGo && \
     ./configure --enable-debug --disable-strip --enable-saml2 \
         --enable-mfa --enable-sodium && \

@@ -1,0 +1,53 @@
+diff --git a/SoObjects/SOGo/SOGoSystemDefaults.h b/SoObjects/SOGo/SOGoSystemDefaults.h
+index a7e29c82c..d3cf7b56f 100644
+--- a/SoObjects/SOGo/SOGoSystemDefaults.h
++++ b/SoObjects/SOGo/SOGoSystemDefaults.h
+@@ -52,6 +52,7 @@ static const NSString *kDisableSharingCalendar = @"Calendar";
+ - (BOOL) debugLeaks;
+ - (int) vmemLimit;
+ - (BOOL) trustProxyAuthentication;
++- (NSString *) cookieDomain;
+ - (NSString *) encryptionKey;
+ - (BOOL) isSogoSecretSet;
+ - (NSString *) sogoSecretValue;
+diff --git a/SoObjects/SOGo/SOGoSystemDefaults.m b/SoObjects/SOGo/SOGoSystemDefaults.m
+index abca1d906..71eb677c0 100644
+--- a/SoObjects/SOGo/SOGoSystemDefaults.m
++++ b/SoObjects/SOGo/SOGoSystemDefaults.m
+@@ -498,6 +498,11 @@ _injectConfigurationFromFile (NSMutableDictionary *defaultsDict,
+   return [self boolForKey: @"SOGoTrustProxyAuthentication"];
+ }
+ 
++- (NSString *) cookieDomain
++{
++  return [self stringForKey: @"SOGoCookieDomain"];
++}
++
+ - (NSString *) encryptionKey;
+ {
+   return [self stringForKey: @"SOGoEncryptionKey"];
+diff --git a/SoObjects/SOGo/SOGoWebAuthenticator.m b/SoObjects/SOGo/SOGoWebAuthenticator.m
+index 84929f8d0..7f3093926 100644
+--- a/SoObjects/SOGo/SOGoWebAuthenticator.m
++++ b/SoObjects/SOGo/SOGoWebAuthenticator.m
+@@ -482,11 +482,18 @@
+                            userKey, sessionKey];
+   cookieValue = [NSString stringWithFormat: @"basic %@",
+                           [cookieString stringByEncodingBase64]];
+-  isSecure = [[[context serverURL] scheme] isEqualToString: @"https"];
++  // Honour X-Forwarded-Proto set by SSL-terminating reverse proxies so that
++  // the Secure flag is correct even when SOGo only sees plain HTTP internally.
++  NSString *forwardedProto = [[context request] headerForKey: @"x-forwarded-proto"];
++  if ([forwardedProto length])
++    isSecure = [[forwardedProto lowercaseString] isEqualToString: @"https"];
++  else
++    isSecure = [[[context serverURL] scheme] isEqualToString: @"https"];
++
+   authCookie = [WOCookie cookieWithName: [self cookieNameInContext: context]
+                                   value: cookieValue
+                                    path: nil
+-                                 domain: nil
++                                 domain: [[SOGoSystemDefaults sharedSystemDefaults] cookieDomain]
+                                 expires: nil
+                                isSecure: isSecure
+                                httpOnly: YES];
