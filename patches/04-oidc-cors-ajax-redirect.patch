@@ -1,5 +1,5 @@
 diff --git a/UI/MainUI/SOGoRootPage.m b/UI/MainUI/SOGoRootPage.m
-index 03c0250e6..29802c2fb 100644
+index 03c0250e6..4f7065b20 100644
 --- a/UI/MainUI/SOGoRootPage.m
 +++ b/UI/MainUI/SOGoRootPage.m
 @@ -716,6 +716,28 @@ static const NSString *kJwtKey = @"jwt";
@@ -20,7 +20,7 @@ index 03c0250e6..29802c2fb 100644
 +                          && [acceptHeader rangeOfString: @"application/json"].location != NSNotFound;
 +      if (isAngularXHR)
 +        {
-+          WOResponse *ajaxError = [WOResponse responseWithRequest: rq];
++          WOResponse *ajaxError = [context response];
 +          [ajaxError setStatus: 401];
 +          [ajaxError setHeader: @"Bearer realm=\"SOGo\"" forKey: @"WWW-Authenticate"];
 +          [ajaxError setHeader: @"application/json" forKey: @"content-type"];
