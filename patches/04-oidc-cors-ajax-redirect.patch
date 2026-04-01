@@ -1,0 +1,61 @@
+diff --git a/UI/MainUI/SOGoRootPage.m b/UI/MainUI/SOGoRootPage.m
+index 03c0250e6..8b5337382 100644
+--- a/UI/MainUI/SOGoRootPage.m
++++ b/UI/MainUI/SOGoRootPage.m
+@@ -716,6 +716,19 @@ static const NSString *kJwtKey = @"jwt";
+       //   //To avoid making a redirection to openid server after a post request, we first redirect to a get method
+       //   newLocation = [NSString stringWithFormat: @"%@?action=redirect", redirectLocation];
+       // else
++
++      // For AJAX/JSON requests a cross-origin 302 to the OIDC provider is
++      // blocked by CORS. Return 401 instead so the Angular ErrorInterceptor
++      // can do a full-page reload, which triggers the OIDC redirect safely.
++      NSString *acceptHeader = [rq headerForKey: @"accept"];
++      NSString *xRequestedWith = [rq headerForKey: @"x-requested-with"];
++      BOOL isAjax = ([xRequestedWith caseInsensitiveCompare: @"XMLHttpRequest"] == NSOrderedSame)
++                    || (acceptHeader && [acceptHeader rangeOfString: @"application/json"].location != NSNotFound
++                        && [acceptHeader rangeOfString: @"text/html"].location == NSNotFound);
++      if (isAjax)
++        return [NSException exceptionWithHTTPStatus: 401
++                                            reason: @"Session expired"];
++
+       if(_domain != nil && [_domain length] > 0)
+       {
+         //add the domain cookie to get it after the redirect
+diff --git a/UI/Templates/UIxPageFrame.wox b/UI/Templates/UIxPageFrame.wox
+index b5bab3285..962114b3c 100644
+--- a/UI/Templates/UIxPageFrame.wox
++++ b/UI/Templates/UIxPageFrame.wox
+@@ -91,6 +91,12 @@
+             <var:if condition="usesSAML2Authentication" const:negate="YES">
+               var usesSAML2Authentication = false;
+             </var:if>
++            <var:if condition="usesOpenIdAuthentication">
++              var usesOpenIdAuthentication = true;
++            </var:if>
++            <var:if condition="usesOpenIdAuthentication" const:negate="YES">
++              var usesOpenIdAuthentication = false;
++            </var:if>
+             <var:if condition="shortUserNameForDisplay" const:value="anonymous" const:negate="YES">
+               var UserFolderURL = '<var:string value="userFolderPath" const:escapeHTML="NO" />';
+               var UserLogin = '<var:string value="shortUserNameForDisplay" const:escapeHTML="NO" />';
+diff --git a/UI/WebServerResources/js/Common/Common.app.js b/UI/WebServerResources/js/Common/Common.app.js
+index cbed827e1..a0492115e 100644
+--- a/UI/WebServerResources/js/Common/Common.app.js
++++ b/UI/WebServerResources/js/Common/Common.app.js
+@@ -379,6 +379,15 @@
+             $window.recovered = true;
+             $window.location.href = $window.ApplicationBaseURL + $state.href($state.current);
+           }
++          else if ($window.usesOpenIdAuthentication && rejection.status == 401 && !$window.recovered) {
++            // Token expired: the server returned 401 instead of a cross-origin
++            // 302 redirect. Do a full-page reload so the browser navigates to
++            // the OIDC provider directly (no CORS issue).
++            $state = $injector.get('$state');
++            angular.element($window).off('beforeunload');
++            $window.recovered = true;
++            $window.location.href = $window.ApplicationBaseURL + ($state.href($state.current) || '');
++          }
+           else if (!rejection.data || !rejection.data.quiet) {
+             // Broadcast the response error
+             $rootScope.$broadcast('http:Error', rejection);
