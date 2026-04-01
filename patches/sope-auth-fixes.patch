@@ -1,0 +1,37 @@
+diff --git a/GDLContentStore/GCSOpenIdFolder.h b/GDLContentStore/GCSOpenIdFolder.h
+index f6bd2965c..1a12b9ff9 100644
+--- a/GDLContentStore/GCSOpenIdFolder.h
++++ b/GDLContentStore/GCSOpenIdFolder.h
+@@ -43,8 +43,9 @@
+ - (void) createFolderIfNotExists;
+ - (BOOL) canConnectStore;
+ 
+-- (NSString *) getRefreshToken: (NSString *) _user_session useOldSession: (BOOL) use_old_session;
++- (NSString *) getRefreshToken: (NSString *) _user_session;
+ - (NSString *) getNewToken: (NSString *) _old_session;
++- (int) getAccessTokenExpiresAt: (NSString *) _user_session;
+ - (NSException *) writeOpenIdSession: (NSString *) _user_session
+                   withOldSession: (NSString *) _old_session
+                   withRefreshToken: (NSString *) _refresh_token
+diff --git a/GDLContentStore/GCSOpenIdFolder.m b/GDLContentStore/GCSOpenIdFolder.m
+index a889a768f..e901b07d6 100644
+--- a/GDLContentStore/GCSOpenIdFolder.m
++++ b/GDLContentStore/GCSOpenIdFolder.m
+@@ -258,6 +258,17 @@ static NSString *openIdFolderURLString = nil;
+   return nil;
+ }
+ 
++- (int) getAccessTokenExpiresAt: (NSString *) _user_session
++{
++  NSDictionary *r;
++
++  r = [self recordForSession: _user_session useOldSession: NO];
++  if (r && [r objectForKey:@"c_access_token_expires_in"])
++    return [[r objectForKey:@"c_access_token_expires_in"] intValue];
++
++  return 0;
++}
++
+ - (NSString *) getNewToken: (NSString *) _old_session
+ {
+   NSDictionary *r;

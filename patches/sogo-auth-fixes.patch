@@ -1,0 +1,101 @@
+diff --git a/SoObjects/SOGo/SOGoOpenIdSession.m b/SoObjects/SOGo/SOGoOpenIdSession.m
+index 0f658214d..ccbdc2db2 100644
+--- a/SoObjects/SOGo/SOGoOpenIdSession.m
++++ b/SoObjects/SOGo/SOGoOpenIdSession.m
+@@ -661,16 +661,31 @@ size_t curl_body_function(void *ptr, size_t size, size_t nmemb, void *buffer)
+ - (NSString *) getCurrentToken
+ {
+   NSString *currentToken;
++  int expiresAt, now;
+ 
+-  //See if the current token has been refreshed
++  //See if the current token has been refreshed by another request
+   currentToken = [[[GCSFolderManager defaultFolderManager] openIdFolder] getNewToken: self->accessToken];
+ 
+   if(currentToken)
+   {
+     //be sure the old token has been cleaned
+     [[[GCSFolderManager defaultFolderManager] openIdFolder] deleteOpenIdSessionFor: self->accessToken];
++    self->accessToken = currentToken;
+     return currentToken;
+   }
++
++  // Proactively refresh if the current token is expired and refresh tokens are enabled
++  if(openIdEnableRefreshToken)
++  {
++    expiresAt = [[[GCSFolderManager defaultFolderManager] openIdFolder] getAccessTokenExpiresAt: self->accessToken];
++    now = (int)[[NSCalendarDate date] timeIntervalSince1970];
++    if(expiresAt > 0 && now >= expiresAt)
++    {
++      [self _login];
++      return self->accessToken;
++    }
++  }
++
+   return self->accessToken;
+ }
+ 
+@@ -909,19 +924,34 @@ size_t curl_body_function(void *ptr, size_t size, size_t nmemb, void *buffer)
+ {
+   NSMutableDictionary *resultUserInfo, *resultResfreh;
+   NSString* _oldAccessToken;
++  BOOL tokenExpired;
++  int expiresAt, now;
+ 
+-  resultUserInfo = [self fetchUserInfo];
+-  if ([[resultUserInfo objectForKey: @"error"] isEqualToString: @"ok"])
+-  { 
+-    //Save some infos as the refresh token to the database
+-    [[[GCSFolderManager defaultFolderManager] openIdFolder] writeOpenIdSession: self->accessToken
+-                                                                withOldSession: nil
+-                                                              withRefreshToken: self->refreshToken
+-                                                                    withExpire: self->expiresIn
+-                                                             withRefreshExpire: self->refreshExpiresIn];
+-    return [resultUserInfo objectForKey: @"login"];
+-  }
+-  else if(openIdEnableRefreshToken)
++  resultUserInfo = nil;
++
++  // Proactively check stored expiry to avoid a failing fetchUserInfo round-trip
++  expiresAt = (self->accessToken
++    ? [[[GCSFolderManager defaultFolderManager] openIdFolder] getAccessTokenExpiresAt: self->accessToken]
++    : 0);
++  now = (int)[[NSCalendarDate date] timeIntervalSince1970];
++  tokenExpired = (expiresAt > 0 && now >= expiresAt);
++
++  if (!tokenExpired)
++    {
++      resultUserInfo = [self fetchUserInfo];
++      if ([[resultUserInfo objectForKey: @"error"] isEqualToString: @"ok"])
++        {
++          //Save some infos as the refresh token to the database
++          [[[GCSFolderManager defaultFolderManager] openIdFolder] writeOpenIdSession: self->accessToken
++                                                                      withOldSession: nil
++                                                                    withRefreshToken: self->refreshToken
++                                                                          withExpire: self->expiresIn
++                                                                   withRefreshExpire: self->refreshExpiresIn];
++          return [resultUserInfo objectForKey: @"login"];
++        }
++    }
++
++  if(openIdEnableRefreshToken)
+   {
+     //try to refresh
+     if(self->accessToken)
+diff --git a/SoObjects/SOGo/SOGoUserManager.m b/SoObjects/SOGo/SOGoUserManager.m
+index ba53568d6..81771400d 100644
+--- a/SoObjects/SOGo/SOGoUserManager.m
++++ b/SoObjects/SOGo/SOGoUserManager.m
+@@ -723,10 +723,9 @@ static const NSString *kObfuscatedSecondaryEmailKey = @"obfuscatedSecondaryEmail
+     }
+ 
+   dictPassword = (currentUser ? [currentUser objectForKey: @"password"] : nil);
+-  if (useCache && currentUser && dictPassword)
++  if (useCache && currentUser && dictPassword && [dictPassword isEqualToString: [_pwd asSHA1String]])
+     {
+-      checkOK = ([dictPassword isEqualToString: [_pwd asSHA1String]]);
+-      //NSLog(@"Password cache hit for user %@", _login);
++      checkOK = YES;
+     }
+   else if ([self _sourceCheckLogin: _login
+                        andPassword: _pwd

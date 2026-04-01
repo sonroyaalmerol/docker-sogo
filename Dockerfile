@@ -1,4 +1,4 @@
-FROM golang:1.24 as tool_plus_builder 
+FROM golang:1.24 as tool_plus_builder
 WORKDIR /app
 
 COPY ./sogo-tool-plus/go.mod ./sogo-tool-plus/go.sum ./
@@ -30,6 +30,7 @@ RUN apt-get update -y && \
         wget \
         make \
         cmake \
+        patch \
         python3 \
         python-is-python3 \
         gnustep-make \
@@ -63,18 +64,20 @@ RUN apt-get update -y && \
     mkdir /tmp/SOGo && \
     mkdir /tmp/SOPE && \
     tar xf /tmp/SOGo.tar.gz -C /tmp/SOGo --strip-components 1 && \
-    tar xf /tmp/SOPE.tar.gz -C /tmp/SOPE --strip-components 1 && \
+    tar xf /tmp/SOPE.tar.gz -C /tmp/SOPE --strip-components 1
+
+COPY patches/sope-auth-fixes.patch /tmp/sope-auth-fixes.patch
+COPY patches/sogo-auth-fixes.patch /tmp/sogo-auth-fixes.patch
+
+RUN patch -p1 -d /tmp/SOPE < /tmp/sope-auth-fixes.patch && \
     cd /tmp/SOPE && \
     ./configure --with-gnustep --enable-debug --disable-strip && \
     make && \
     make install && \
+    patch -p1 -d /tmp/SOGo < /tmp/sogo-auth-fixes.patch && \
     cd /tmp/SOGo && \
     ./configure --enable-debug --disable-strip --enable-saml2 \
-        --enable-mfa --enable-sodium
-
-COPY patches/SOGoUserManager.m /tmp/SOGo/SoObjects/SOGo/SOGoUserManager.m
-
-RUN cd /tmp/SOGo && \
+        --enable-mfa --enable-sodium && \
     make && \
     make install && \
     cd ActiveSync && \
