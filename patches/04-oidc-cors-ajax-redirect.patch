@@ -1,8 +1,8 @@
 diff --git a/UI/MainUI/SOGoRootPage.m b/UI/MainUI/SOGoRootPage.m
-index 03c0250e6..20031521f 100644
+index 03c0250e6..29802c2fb 100644
 --- a/UI/MainUI/SOGoRootPage.m
 +++ b/UI/MainUI/SOGoRootPage.m
-@@ -716,6 +716,24 @@ static const NSString *kJwtKey = @"jwt";
+@@ -716,6 +716,28 @@ static const NSString *kJwtKey = @"jwt";
        //   //To avoid making a redirection to openid server after a post request, we first redirect to a get method
        //   newLocation = [NSString stringWithFormat: @"%@?action=redirect", redirectLocation];
        // else
@@ -10,11 +10,15 @@ index 03c0250e6..20031521f 100644
 +      // For AJAX requests a cross-origin 302 to the OIDC provider is blocked
 +      // by CORS. Return 401 instead so the Angular ErrorInterceptor can do a
 +      // full-page reload, which triggers the OIDC redirect safely.
-+      // We rely solely on X-Requested-With (set by AngularJS on every XHR)
-+      // to avoid false-positives from k8s health probes that may also send
-+      // Accept: application/json but must not receive a 401.
++      // Require BOTH X-Requested-With AND Accept: application/json — AngularJS
++      // always sends both on XHR calls, while k8s/ingress probes typically
++      // only inject one of these headers, avoiding false-positive 401s.
 +      NSString *xRequestedWith = [rq headerForKey: @"x-requested-with"];
-+      if ([xRequestedWith caseInsensitiveCompare: @"XMLHttpRequest"] == NSOrderedSame)
++      NSString *acceptHeader   = [rq headerForKey: @"accept"];
++      BOOL isAngularXHR = ([xRequestedWith caseInsensitiveCompare: @"XMLHttpRequest"] == NSOrderedSame)
++                          && acceptHeader
++                          && [acceptHeader rangeOfString: @"application/json"].location != NSNotFound;
++      if (isAngularXHR)
 +        {
 +          WOResponse *ajaxError = [WOResponse responseWithRequest: rq];
 +          [ajaxError setStatus: 401];
