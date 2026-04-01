@@ -66,15 +66,14 @@ RUN apt-get update -y && \
     tar xf /tmp/SOGo.tar.gz -C /tmp/SOGo --strip-components 1 && \
     tar xf /tmp/SOPE.tar.gz -C /tmp/SOPE --strip-components 1
 
-COPY patches/sope-auth-fixes.patch /tmp/sope-auth-fixes.patch
-COPY patches/sogo-auth-fixes.patch /tmp/sogo-auth-fixes.patch
-
-RUN patch -p1 -d /tmp/SOPE < /tmp/sope-auth-fixes.patch && \
-    cd /tmp/SOPE && \
+RUN cd /tmp/SOPE && \
     ./configure --with-gnustep --enable-debug --disable-strip && \
     make && \
-    make install && \
-    patch -p1 -d /tmp/SOGo < /tmp/sogo-auth-fixes.patch && \
+    make install
+
+COPY patches/sogo-auth-fixes.patch /tmp/sogo-auth-fixes.patch
+
+RUN patch -p1 -d /tmp/SOGo < /tmp/sogo-auth-fixes.patch && \
     cd /tmp/SOGo && \
     ./configure --enable-debug --disable-strip --enable-saml2 \
         --enable-mfa --enable-sodium && \
