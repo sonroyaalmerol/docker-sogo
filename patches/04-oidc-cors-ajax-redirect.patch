@@ -1,23 +1,28 @@
 diff --git a/UI/MainUI/SOGoRootPage.m b/UI/MainUI/SOGoRootPage.m
-index 03c0250e6..8b5337382 100644
+index 03c0250e6..20031521f 100644
 --- a/UI/MainUI/SOGoRootPage.m
 +++ b/UI/MainUI/SOGoRootPage.m
-@@ -716,6 +716,19 @@ static const NSString *kJwtKey = @"jwt";
+@@ -716,6 +716,24 @@ static const NSString *kJwtKey = @"jwt";
        //   //To avoid making a redirection to openid server after a post request, we first redirect to a get method
        //   newLocation = [NSString stringWithFormat: @"%@?action=redirect", redirectLocation];
        // else
 +
-+      // For AJAX/JSON requests a cross-origin 302 to the OIDC provider is
-+      // blocked by CORS. Return 401 instead so the Angular ErrorInterceptor
-+      // can do a full-page reload, which triggers the OIDC redirect safely.
-+      NSString *acceptHeader = [rq headerForKey: @"accept"];
++      // For AJAX requests a cross-origin 302 to the OIDC provider is blocked
++      // by CORS. Return 401 instead so the Angular ErrorInterceptor can do a
++      // full-page reload, which triggers the OIDC redirect safely.
++      // We rely solely on X-Requested-With (set by AngularJS on every XHR)
++      // to avoid false-positives from k8s health probes that may also send
++      // Accept: application/json but must not receive a 401.
 +      NSString *xRequestedWith = [rq headerForKey: @"x-requested-with"];
-+      BOOL isAjax = ([xRequestedWith caseInsensitiveCompare: @"XMLHttpRequest"] == NSOrderedSame)
-+                    || (acceptHeader && [acceptHeader rangeOfString: @"application/json"].location != NSNotFound
-+                        && [acceptHeader rangeOfString: @"text/html"].location == NSNotFound);
-+      if (isAjax)
-+        return [NSException exceptionWithHTTPStatus: 401
-+                                            reason: @"Session expired"];
++      if ([xRequestedWith caseInsensitiveCompare: @"XMLHttpRequest"] == NSOrderedSame)
++        {
++          WOResponse *ajaxError = [WOResponse responseWithRequest: rq];
++          [ajaxError setStatus: 401];
++          [ajaxError setHeader: @"Bearer realm=\"SOGo\"" forKey: @"WWW-Authenticate"];
++          [ajaxError setHeader: @"application/json" forKey: @"content-type"];
++          [ajaxError appendContentString: @"{\"error\":\"session_expired\"}"];
++          return ajaxError;
++        }
 +
        if(_domain != nil && [_domain length] > 0)
        {
