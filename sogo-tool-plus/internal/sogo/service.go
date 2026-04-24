@@ -140,9 +140,6 @@ func readSogoConfig(filePath string) (*SOGoConfig, error) {
 }
 
 func parseSogoDSN(sogoURL string) (DBConfig, error) {
-	var driver string
-	var dsn string
-
 	parsedURL, err := url.Parse(sogoURL)
 	if err != nil {
 		return DBConfig{}, fmt.Errorf(
@@ -152,6 +149,8 @@ func parseSogoDSN(sogoURL string) (DBConfig, error) {
 		)
 	}
 
+	// SOGo URLs always end with /database/table.
+	// The last path segment is the table name.
 	tableName := path.Base(parsedURL.Path)
 	if tableName == "." || tableName == "/" || tableName == "" {
 		return DBConfig{}, fmt.Errorf(
@@ -160,10 +159,41 @@ func parseSogoDSN(sogoURL string) (DBConfig, error) {
 		)
 	}
 
+	// The database name is the second-to-last path segment.
+	dbPath := path.Dir(parsedURL.Path) // strips /table
+	dbName := path.Base(dbPath)
+	if dbName == "." || dbName == "/" || dbName == "" {
+		return DBConfig{}, fmt.Errorf(
+			"could not extract database name from path '%s'",
+			parsedURL.Path,
+		)
+	}
+
 	switch parsedURL.Scheme {
+	case "postgresql":
+		// Build a lib/pq-compatible URL: postgres://user:pass@host:port/dbname?sslmode=...
+		// Must strip the table name from the path so lib/pq sees only /dbname.
+		dsnURL := *parsedURL // shallow copy
+		dsnURL.Path = dbPath
+		dsnURL.RawPath = dbPath
+		query := dsnURL.Query()
+		if query.Get("sslmode") == "" {
+			if sslmode := os.Getenv("PGSSLMODE"); sslmode != "" {
+				query.Set("sslmode", sslmode)
+			} else {
+				query.Set("sslmode", "prefer")
+			}
+		}
+		dsnURL.RawQuery = query.Encode()
+		return DBConfig{
+			Driver: "postgres",
+			DSN:    dsnURL.String(),
+			Table:  tableName,
+		}, nil
+
 	case "mysql":
-		driver = "mysql"
-		// Reconstruct DSN (user:pass@tcp(host:port)/dbname?params)
+		// Build go-sql-driver/mysql DSN: user:pass@tcp(host:port)/dbname?tls=...&parseTime=true
+		var dsn string
 		if parsedURL.User != nil {
 			dsn += parsedURL.User.String() + "@"
 		}
@@ -171,31 +201,42 @@ func parseSogoDSN(sogoURL string) (DBConfig, error) {
 		if !strings.Contains(host, "(") {
 			host = fmt.Sprintf("tcp(%s)", host)
 		}
-		dsn += host
-		dbName := path.Dir(parsedURL.Path)
-		if dbName != "" && dbName != "." {
-			dsn += dbName
-		}
+		dsn += host + dbPath
 		query := parsedURL.Query()
 		if query.Get("tls") == "" {
-			query.Set("tls", "preferred")
+			if pgsslmode := os.Getenv("PGSSLMODE"); pgsslmode != "" {
+				if pgsslmode == "disable" || pgsslmode == "allow" || pgsslmode == "prefer" {
+					query.Set("tls", "false")
+				} else {
+					query.Set("tls", "preferred")
+				}
+			} else {
+				query.Set("tls", "preferred")
+			}
 		}
-		// Ensure parseTime for TIMESTAMP/DATETIME columns
 		if query.Get("parseTime") == "" {
 			query.Set("parseTime", "true")
 		}
 		dsn += "?" + query.Encode()
+		return DBConfig{
+			Driver: "mysql",
+			DSN:    dsn,
+			Table:  tableName,
+		}, nil
 
-	case "postgresql":
-		driver = "postgres"
-		// lib/pq accepts the URL format directly
-		// Ensure sslmode is set, default to 'prefer'
-		query := parsedURL.Query()
-		if query.Get("sslmode") == "" {
-			query.Set("sslmode", "prefer")
+	case "oracle":
+		// Build Oracle EZConnect DSN: user/pass@host:port/servicename
+		var user, pass string
+		if parsedURL.User != nil {
+			user = parsedURL.User.Username()
+			pass, _ = parsedURL.User.Password()
 		}
-		parsedURL.RawQuery = query.Encode()
-		dsn = parsedURL.String()
+		dsn := fmt.Sprintf("%s/%s@%s/%s", user, pass, parsedURL.Host, dbName)
+		return DBConfig{
+			Driver: "oracle",
+			DSN:    dsn,
+			Table:  tableName,
+		}, nil
 
 	default:
 		return DBConfig{}, fmt.Errorf(
@@ -204,8 +245,6 @@ func parseSogoDSN(sogoURL string) (DBConfig, error) {
 			sogoURL,
 		)
 	}
-
-	return DBConfig{Driver: driver, DSN: dsn, Table: tableName}, nil
 }
 
 func (s *SogoService) userProfileExists(uid string) (bool, error) {
