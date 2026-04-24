@@ -1,4 +1,5 @@
 # SOGo Docker Container
+
 [![Release](https://img.shields.io/github/v/release/sonroyaalmerol/docker-sogo)](https://github.com/sonroyaalmerol/docker-sogo/releases)
 [![Docker Pulls](https://img.shields.io/docker/pulls/sonroyaalmerol/docker-sogo)](https://hub.docker.com/r/sonroyaalmerol/docker-sogo)
 [![Docker Stars](https://img.shields.io/docker/stars/sonroyaalmerol/docker-sogo)](https://hub.docker.com/r/sonroyaalmerol/docker-sogo)
@@ -23,22 +24,25 @@ SOGo is the missing component of your infrastructure; it sits in the middle of y
 >
 > This container builds the stable source code and should be similar, if not the same, as the official stable builds. However, if you can afford [paying](https://www.sogo.nu/commercial.html), you should consider supporting SOGo.
 
-This container is mainly built with Kubernetes in mind. As such, one of the main unique features of this container is its ability to use YAML configuration files. 
+This container is mainly built with Kubernetes in mind. As such, one of the main unique features of this container is its ability to use YAML configuration files.
 
 - **Automated Builds**: SOGo **stable** releases are checked every day for updates and will trigger the Docker image build automatically.
 - **Follows the official SOGo version tagging**: Docker image tags follows the version tagging of SOGo releases starting from version `5.10.0`. Backporting to different versions will be considered.
 - **YAML Configuration Support**: Users can define SOGo configurations using YAML files, allowing for easier management and version control. The included script automatically merges and converts YAML configurations into the required OpenStep plist format, simplifying the setup process.
 
 ## Supported tags
+
 To make things simpler, the container will mainly follow SOGo's versioning with the addition of a `revision` tag which will serve as an additional incremental versioning system for each container-specific modifications I push through a certain SOGo version. This way, features that I implement for the container can and will be backported to previous SOGo versions while having automated builds for new SOGo releases at the same time. For stability and pinning, you will want to use the tag with the container revision.
-  - `latest` (will always follow the latest container revision of the latest SOGo version)
-  - `${SOGo-version}` (e.g. `5.10.0`)
-  - `${SOGo-version}-${Container-Revision}` (e.g. `5.10.0-1`)
+
+- `latest` (will always follow the latest container revision of the latest SOGo version)
+- `${SOGo-version}` (e.g. `5.10.0`)
+- `${SOGo-version}-${Container-Revision}` (e.g. `5.10.0-1`)
 
 ## Why did I build this container?
-  - Mainly due to SOGo being used by the company I work for. As we transition to using Kubernetes for our services, we needed to containerize most of our legacy services, including SOGo.
-  - We also needed a clear way to downgrade to a specific version as much as possible which proved to be difficult to do with currently available SOGo containers being built with nightly Debian packages.
-  - Using OpenStep plist format for configuration was difficult to maintain since we preferred to use multiple files for different sections of the configuration. With our database secrets in Kubernetes being dynamically generated, having one config file for database credentials separated from the rest of the configurations was essential.
+
+- Mainly due to SOGo being used by the company I work for. As we transition to using Kubernetes for our services, we needed to containerize most of our legacy services, including SOGo.
+- We also needed a clear way to downgrade to a specific version as much as possible which proved to be difficult to do with currently available SOGo containers being built with nightly Debian packages.
+- Using OpenStep plist format for configuration was difficult to maintain since we preferred to use multiple files for different sections of the configuration. With our database secrets in Kubernetes being dynamically generated, having one config file for database credentials separated from the rest of the configurations was essential.
 
 ## Usage
 
@@ -55,6 +59,7 @@ Replace `/path/to/sogo/configs` with the directory containing your YAML configur
 The NGINX process inside the container will host the web server on port 80 by default. See the [default NGINX config](https://github.com/sonroyaalmerol/docker-sogo/blob/main/default-configs/nginx.conf) for more info.
 
 ### Running in Kubernetes with Helm
+
 > [!IMPORTANT]
 > This chart is still in its beta stage. Do not use in production.
 
@@ -70,6 +75,7 @@ helm repo add sogo https://helm.snry.xyz/docker-sogo/
 Running `helm search repo sogo` should now display the chart and it's versions
 
 To install the helm chart, use
+
 ```console
 helm install sogo sogo/sogo --create-namespace --namespace sogo
 ```
@@ -111,7 +117,7 @@ NGImap4AuthMechanism: plain
 NGImap4ConnectionStringSeparator: "/"
 ```
 
-When the container initializes, a script will merge both YAML files to a single YAML file with `yq` and generate the final `/etc/sogo/sogo.conf` file.
+When the container initializes, the config-generator merges both YAML files and generates the final `/etc/sogo/sogo.conf` file.
 
 ```conf filename="sogo.conf"
 {
@@ -140,6 +146,7 @@ When the container initializes, a script will merge both YAML files to a single 
 The config parameters are exactly the same, just in a different format. Arrays in YAML will be converted to arrays in OpenStep plist. Maps in YAML will be converted to maps in OpenStep plist. Booleans in YAML will be converted to either `YES` or `NO` appropriately.
 
 This YAML file below is equivalent to
+
 ```yaml
 SOGoUserSources:
   - type: ldap
@@ -158,6 +165,7 @@ SOGoUserSources:
 ```
 
 this OpenStep plist:
+
 ```conf
 {
   SOGoUserSources = (

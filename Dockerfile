@@ -87,8 +87,6 @@ RUN for p in $(ls /tmp/patches/*.patch | sort); do \
 
 FROM debian:trixie-slim
 
-ARG TARGETARCH
-
 ENV PUID=1000
 ENV PGID=1000
 
@@ -131,8 +129,7 @@ RUN apt-get update -y && \
         tmpreaper \
         zip \
         zlib1g && \
-    rm -rf /var/lib/apt/lists/* &&\
-    curl -L -o /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_$TARGETARCH
+    rm -rf /var/lib/apt/lists/*
 
 # add config, binaries, libraries, and init files
 COPY --from=builder /usr/local/sbin/ /usr/local/sbin/
@@ -174,7 +171,6 @@ RUN a2enmod \
     mv /usr/share/doc/sogo/sogo-default /etc/default/sogo && \
     mv /usr/share/doc/sogo/sogo.conf /etc/sogo/sogo.conf && \
     mv /usr/share/doc/sogo/logrotate /etc/logrotate.d/sogo && \
-    chmod +rx /usr/bin/yq && \
     chmod +rx /opt/entrypoint.sh && \
     chmod +rx /opt/sogod.sh && \
     chmod +x /opt/config-generator && \
