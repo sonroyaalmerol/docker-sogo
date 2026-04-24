@@ -24,9 +24,14 @@ func NewSogoService(configFile string) (*SogoService, error) {
 	}
 
 	log.Println("Parsing database connection details...")
-	s.aclConfig, err = parseSogoDSN(config.ACLDbUrl)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse ACL DB URL: %w", err)
+
+	if config.ACLDbUrl != "" {
+		s.aclConfig, err = parseSogoDSN(config.ACLDbUrl)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse ACL DB URL: %w", err)
+		}
+	} else {
+		log.Println("WARNING: OCSAclURL not configured. ACL-related features will be unavailable.")
 	}
 
 	s.usersConfig, err = parseSogoDSN(config.UsersDbUrl)
@@ -39,19 +44,21 @@ func NewSogoService(configFile string) (*SogoService, error) {
 		return nil, fmt.Errorf("failed to parse Sessions DB URL: %w", err)
 	}
 
-	log.Printf(
-		"Connecting to ACL database (%s driver)...",
-		s.aclConfig.Driver,
-	)
-	s.aclDB, err = sql.Open(s.aclConfig.Driver, s.aclConfig.DSN)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open ACL DB connection: %w", err)
+	if config.ACLDbUrl != "" {
+		log.Printf(
+			"Connecting to ACL database (%s driver)...",
+			s.aclConfig.Driver,
+		)
+		s.aclDB, err = sql.Open(s.aclConfig.Driver, s.aclConfig.DSN)
+		if err != nil {
+			return nil, fmt.Errorf("failed to open ACL DB connection: %w", err)
+		}
+		if err := s.aclDB.Ping(); err != nil {
+			s.aclDB.Close()
+			return nil, fmt.Errorf("failed to ping ACL DB: %w", err)
+		}
+		log.Println("ACL database connection successful.")
 	}
-	if err := s.aclDB.Ping(); err != nil {
-		s.aclDB.Close()
-		return nil, fmt.Errorf("failed to ping ACL DB: %w", err)
-	}
-	log.Println("ACL database connection successful.")
 
 	log.Printf(
 		"Connecting to Users database (%s driver)...",
@@ -123,9 +130,9 @@ func readSogoConfig(filePath string) (*SOGoConfig, error) {
 		return nil, fmt.Errorf("could not decode plist config: %w", err)
 	}
 
-	if sogoConfig.ACLDbUrl == "" || sogoConfig.UsersDbUrl == "" || sogoConfig.SessionsDbUrl == "" {
+	if sogoConfig.UsersDbUrl == "" || sogoConfig.SessionsDbUrl == "" {
 		return nil, errors.New(
-			"OCSAclURL, SOGoProfileURL, or OCSSessionsFolderURL missing in config",
+			"SOGoProfileURL or OCSSessionsFolderURL missing in config",
 		)
 	}
 

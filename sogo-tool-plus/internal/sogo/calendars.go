@@ -30,6 +30,10 @@ func (s *SogoService) CalSubscribeUser(uid string) error {
 		log.Printf("User profile for '%s' already exists.", uid)
 	}
 
+	if s.aclDB == nil {
+		return fmt.Errorf("OCSAclURL not configured, ACL operation unavailable")
+	}
+
 	sqlStmt := s.aclConfig.normalize(fmt.Sprintf(`
         SELECT DISTINCT c_object
         FROM %s
@@ -126,6 +130,10 @@ func (s *SogoService) CalSubscribeAll() error {
 	defer s.mu.Unlock()
 
 	log.Println("Starting subscription process for all users...")
+
+	if s.aclDB == nil {
+		return fmt.Errorf("OCSAclURL not configured, ACL operation unavailable")
+	}
 
 	sqlStmt := s.aclConfig.normalize(fmt.Sprintf(`
         SELECT c_object, c_uid
