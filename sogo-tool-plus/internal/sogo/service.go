@@ -60,6 +60,26 @@ func NewSogoService(configFile string) (*SogoService, error) {
 		log.Println("ACL database connection successful.")
 	}
 
+	if config.OCSFolderInfoURL != "" {
+		s.folderInfoConfig, err = parseSogoDSN(config.OCSFolderInfoURL)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse OCSFolderInfoURL: %w", err)
+		}
+		log.Printf(
+			"Connecting to FolderInfo database (%s driver)...",
+			s.folderInfoConfig.Driver,
+		)
+		s.folderInfoDB, err = sql.Open(s.folderInfoConfig.Driver, s.folderInfoConfig.DSN)
+		if err != nil {
+			return nil, fmt.Errorf("failed to open FolderInfo DB connection: %w", err)
+		}
+		if err := s.folderInfoDB.Ping(); err != nil {
+			s.folderInfoDB.Close()
+			return nil, fmt.Errorf("failed to ping FolderInfo DB: %w", err)
+		}
+		log.Println("FolderInfo database connection successful.")
+	}
+
 	log.Printf(
 		"Connecting to Users database (%s driver)...",
 		s.usersConfig.Driver,
@@ -109,6 +129,10 @@ func (s *SogoService) Close() {
 	if s.sessionsDB != nil {
 		s.sessionsDB.Close()
 		log.Println("Sessions database connection closed.")
+	}
+	if s.folderInfoDB != nil {
+		s.folderInfoDB.Close()
+		log.Println("FolderInfo database connection closed.")
 	}
 }
 
@@ -204,8 +228,10 @@ func parseSogoDSN(sogoURL string) (DBConfig, error) {
 		dsn += host + dbPath
 		query := parsedURL.Query()
 		if query.Get("tls") == "" {
-			if pgsslmode := os.Getenv("PGSSLMODE"); pgsslmode != "" {
-				if pgsslmode == "disable" || pgsslmode == "allow" || pgsslmode == "prefer" {
+			if mysqlTLS := os.Getenv("MYSQL_TLS"); mysqlTLS != "" {
+				if mysqlTLS == "true" {
+					query.Set("tls", "true")
+				} else if mysqlTLS == "false" {
 					query.Set("tls", "false")
 				} else {
 					query.Set("tls", "preferred")

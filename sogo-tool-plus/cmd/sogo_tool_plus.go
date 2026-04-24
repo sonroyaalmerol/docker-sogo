@@ -59,7 +59,7 @@ func runCLI(service *sogo.SogoService, action, uid string, duration int) {
 		)
 	default:
 		log.Fatalf(
-			"Invalid action: %s. Use 'cal-subscribe-user' or 'cal-subscribe-all'.",
+			"Invalid action: %s. Use 'cal-subscribe-user', 'cal-subscribe-all', or 'expire-sessions-creation'.",
 			action,
 		)
 	}
@@ -80,7 +80,7 @@ func main() {
 	action := flag.String(
 		"action",
 		"",
-		"CLI action: 'cal-subscribe-user' or 'cal-subscribe-all'",
+		"CLI action: 'cal-subscribe-user', 'cal-subscribe-all', or 'expire-sessions-creation'",
 	)
 	uid := flag.String("uid", "", "User ID for 'cal-subscribe-user' action")
 	sessionDuration := flag.Int("duration", 0, "Max duration for sessions since creation date in minutes (must be greater than zero)")
