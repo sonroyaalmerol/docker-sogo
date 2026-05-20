@@ -19,6 +19,7 @@ RUN go test -v ./... && go build -o config-generator
 FROM debian:trixie AS builder
 
 ARG SOGO_VERSION
+ARG SKIP_PATCHES=false
 
 ADD https://packages.sogo.nu/sources/SOGo-${SOGO_VERSION}.tar.gz /tmp/SOGo.tar.gz
 ADD https://packages.sogo.nu/sources/SOPE-${SOGO_VERSION}.tar.gz /tmp/SOPE.tar.gz
@@ -73,9 +74,13 @@ RUN cd /tmp/SOPE && \
 
 COPY patches/ /tmp/patches/
 
-RUN for p in $(ls /tmp/patches/*.patch | sort); do \
-        echo "Applying $p" && patch -p1 -d /tmp/SOGo < "$p"; \
-    done && \
+RUN if [ "$SKIP_PATCHES" != "true" ]; then \
+        for p in $(ls /tmp/patches/*.patch | sort); do \
+            echo "Applying $p" && patch -p1 -d /tmp/SOGo < "$p"; \
+        done; \
+    else \
+        echo "Skipping patches (SKIP_PATCHES=true)"; \
+    fi && \
     cd /tmp/SOGo && \
     ./configure --enable-debug --disable-strip --enable-saml2 \
         --enable-mfa --enable-sodium && \

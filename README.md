@@ -37,6 +37,7 @@ To make things simpler, the container will mainly follow SOGo's versioning with 
 - `latest` (will always follow the latest container revision of the latest SOGo version)
 - `${SOGo-version}` (e.g. `5.10.0`)
 - `${SOGo-version}-${Container-Revision}` (e.g. `5.10.0-1`)
+- `${SOGo-version}-vanilla` (e.g. `5.10.0-1-vanilla`, unpatched SOGo — see [Patches](#patches))
 
 ## Why did I build this container?
 
@@ -189,6 +190,55 @@ this OpenStep plist:
 ```
 
 If you want to use the usual OpenStep plist config instead, just mount your existing `sogo.conf` to `/etc/sogo/sogo.conf` and make sure to leave `/etc/sogo/sogo.conf.d/` empty.
+
+## Patches
+
+The following patches are applied to the SOGo source at build time. They are located in `patches/` and applied in sorted order.
+
+### Skipping Patches
+
+Set the `SKIP_PATCHES` build argument to `true` to build an unmodified SOGo:
+
+```bash
+docker build --build-arg SKIP_PATCHES=true -t sogo-unpatched .
+```
+
+You can also apply a subset of patches by mounting only the ones you want into `patches/` before building.
+
+### Patch List
+
+The following patches are applied to the SOGo source at build time. They are located in `patches/` and applied in sorted order.
+
+### `01-ldap-multi-password.patch`
+
+**Files:** `SOGoSource.h`, `LDAPSource.m`, `SQLSource.m`, `SOGoUserManager.m`
+
+Enables CalDAV/CardDAV authentication to continue working when the LDAP server is down, and supports accounts with multiple valid LDAP passwords.
+
+- **Always tries LDAP first.** The cache is only used as a fallback when the LDAP server is unreachable — never when it's up.
+- **Caches all valid password hashes.** On successful LDAP auth, the SHA1 hash is appended to a `passwords` array in the memcached user attributes. Multiple valid passwords accumulate over time.
+- **Offline fallback.** When LDAP is unreachable (detected via connection exceptions), authentication falls back to checking the cached `passwords` array.
+- **Invalidates stale passwords.** When LDAP is up and rejects a password that was previously cached, that hash is removed from the cache.
+- **Password changes.** When a user explicitly changes their password via SOGo, the old hashes are replaced with the new one.
+- Backward-compatible `password` key is maintained alongside the new `passwords` array.
+
+### `02-oidc-refresh-token.patch`
+
+**Files:** `GCSOpenIdFolder.h`, `GCSOpenIdFolder.m`, `SOGoOpenIdSession.m`
+
+Adds OpenID Connect refresh token handling.
+
+### `03-reverse-proxy-cookie.patch`
+
+**Files:** `SOGoSystemDefaults.h`, `SOGoSystemDefaults.m`, `SOGoWebAuthenticator.m`
+
+Adds support for reverse proxy cookie-based authentication.
+
+### `04-oidc-cors-ajax-redirect.patch`
+
+**Files:** `SOGoRootPage.m`, `UIxPageFrame.wox`, `Common.app.js`
+
+Handles CORS and AJAX redirect issues with OIDC authentication flows.
 
 ## Future Plans
 
