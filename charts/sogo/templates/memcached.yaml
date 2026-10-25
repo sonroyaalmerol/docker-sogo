@@ -1,0 +1,103 @@
+{{- if .Values.memcached.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "sogo.memcached.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "sogo.name" . }}
+    helm.sh/chart: {{ include "sogo.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/component: memcached
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "sogo.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: memcached
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "sogo.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: memcached
+    spec:
+      {{- with .Values.memcached.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: memcached
+          image: "{{ .Values.memcached.image.repository }}:{{ .Values.memcached.image.tag }}"
+          imagePullPolicy: {{ .Values.memcached.image.pullPolicy }}
+          args:
+            - memcached
+            - -m
+            - {{ .Values.memcached.maxItemMemory | quote }}
+            - -c
+            - {{ .Values.memcached.maxConnections | quote }}
+            {{- with .Values.memcached.extraArgs }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          ports:
+            - name: memcache
+              containerPort: 11211
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: memcache
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: memcache
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          {{- with .Values.memcached.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 11211
+            capabilities:
+              drop:
+                - ALL
+      {{- with .Values.memcached.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.memcached.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.memcached.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "sogo.memcached.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "sogo.name" . }}
+    helm.sh/chart: {{ include "sogo.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/component: memcached
+spec:
+  type: ClusterIP
+  ports:
+    - port: 11211
+      targetPort: memcache
+      protocol: TCP
+      name: memcache
+  selector:
+    app.kubernetes.io/name: {{ include "sogo.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: memcached
+{{- end }}

@@ -1,4 +1,12 @@
 {{- /*
+SOGo cannot start without a database, and no database is bundled with this
+chart anymore. Accept any of the three configuration routes; when none is set
+the render fails instead of deploying a crashlooping pod.
+*/ -}}
+{{- if and (not .Values.sogo.configs.OCSFolderInfoURL) (not .Values.sogo.secrets) (not .Values.sogo.existingSecrets) -}}
+{{- fail "no database configured: set sogo.configs.OCSFolderInfoURL (and friends) pointing at an external PostgreSQL or MariaDB server - see the Databases section of the README" -}}
+{{- end -}}
+{{- /*
 Sessions, login caches and the cron singleton lock all live in memcached. With
 more than one replica and no memcached, each pod keeps its own session cache and
 users get logged out whenever the load balancer moves them, with nothing logged.

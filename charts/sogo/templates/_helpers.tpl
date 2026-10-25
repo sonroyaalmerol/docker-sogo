@@ -47,35 +47,8 @@ Create image name that is used in the deployment
 
 
 {{/*
-Create DB URL paths
-*/}}
-{{- define "sogo.db.baseUrl" -}}
-{{- if .Values.postgresql.enabled -}}
-{{- printf "postgresql://%s:%s@%s:5432/%s" (or .Values.postgresql.global.postgresql.auth.username .Values.postgresql.auth.username) (or .Values.postgresql.global.postgresql.auth.password .Values.postgresql.auth.password) (include "postgresql.v1.primary.fullname" .Subcharts.postgresql) (or .Values.postgresql.global.postgresql.auth.database .Values.postgresql.auth.database) -}}
-{{- else if .Values.mariadb.enabled -}}
-{{- printf "mysql://%s:%s@%s:3306/%s" .Values.mariadb.auth.username .Values.mariadb.auth.password (include "mariadb.primary.fullname" .Subcharts.mariadb) .Values.mariadb.auth.database -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "sogo.db.configs" -}}
-SOGoProfileURL: {{ printf "%s/sogo_user_profile" (include "sogo.db.baseUrl" .) }}
-OCSFolderInfoURL: {{ printf "%s/sogo_folder_info" (include "sogo.db.baseUrl" .) }}
-OCSSessionsFolderURL: {{ printf "%s/sogo_sessions_folder" (include "sogo.db.baseUrl" .) }}
-OCSAdminURL: {{ printf "%s/sogo_admin" (include "sogo.db.baseUrl" .) }}
-OCSStoreURL: {{ printf "%s/sogo_store" (include "sogo.db.baseUrl" .) }}
-OCSAclURL: {{ printf "%s/sogo_acl" (include "sogo.db.baseUrl" .) }}
-OCSCacheFolderURL: {{ printf "%s/sogo_cache_folder" (include "sogo.db.baseUrl" .) }}
-OCSEMailAlarmsFolderURL: {{ printf "%s/sogo_alarms_folder" (include "sogo.db.baseUrl" .) }}
-SOGoUserSources:
-  - type: sql
-    id: directory
-    viewURL: {{ printf "%s/sogo_view" (include "sogo.db.baseUrl" .) }}
-    canAuthenticate: true
-    isAddressBook: true
-    userPasswordAlgorithm: md5
-{{- end -}}
-
-{{- define "sogo.db.parsed.type" -}}
+Parse credentials out of sogo.configs.OCSFolderInfoURL for the db secret.
+*/}}{{- define "sogo.db.parsed.type" -}}
 {{- if .Values.sogo.configs.OCSFolderInfoURL }}
 {{- $parts := split "://" .Values.sogo.configs.OCSFolderInfoURL -}}
 {{- $db_type := $parts._0 -}}
@@ -131,20 +104,8 @@ SOGoUserSources:
 {{- end -}}
 {{- end -}}
 
-{{- define "sogo.mariadb.fullname" -}}
-{{- if or .Values.mariadb.enabled (eq (include "sogo.db.parsed.type" .) "mysql") -}}
-{{- include "sogo.db.parsed.hostname" . | default (ternary (printf "%s-mariadb" .Release.Name) "" .Values.mariadb.enabled) -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "sogo.postgresql.fullname" -}}
-{{- if or .Values.postgresql.enabled (eq (include "sogo.db.parsed.type" .) "postgresql") -}}
-{{- include "sogo.db.parsed.hostname" . | default (ternary (include "postgresql.v1.primary.fullname" .Subcharts.postgresql) "" .Values.postgresql.enabled) -}}
-{{- end -}}
-{{- end -}}
-
 {{- define "sogo.memcached.fullname" -}}
-{{ template "common.names.fullname" .Subcharts.memcached }}
+{{- printf "%s-memcached" (include "sogo.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{- define "sogo.memcached.configs" -}}

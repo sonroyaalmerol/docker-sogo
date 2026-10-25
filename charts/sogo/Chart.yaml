@@ -30,16 +30,3 @@ annotations:
   artifacthub.io/screenshots: |
     - title: SOGo
       url: https://www.sogo.nu/img/screenshot.png
-dependencies:
-  - name: postgresql
-    version: 15.3.*
-    repository: oci://registry-1.docker.io/bitnamicharts
-    condition: postgresql.enabled
-  - name: mariadb
-    version: 18.0.*
-    repository: oci://registry-1.docker.io/bitnamicharts
-    condition: mariadb.enabled
-  - name: memcached
-    version: 7.0.*
-    repository: oci://registry-1.docker.io/bitnamicharts
-    condition: memcached.enabled

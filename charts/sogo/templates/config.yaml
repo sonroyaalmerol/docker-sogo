@@ -40,10 +40,6 @@ data:
 {{- end }}
   init-theme-configs: |
     SOGoUIxDebugEnabled: true
-{{- if or .Values.mariadb.enabled .Values.postgresql.enabled }}
-  internal-db: |
-{{- include "sogo.db.configs" . | nindent 4 }}
-{{- end }}
 {{- if .Values.memcached.enabled }}
   internal-memcached: |
 {{- include "sogo.memcached.configs" . | nindent 4 }}

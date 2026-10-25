@@ -294,76 +294,28 @@ startupProbe:
   failureThreshold: 30
   successThreshold: 1
 
-##
-## PostgreSQL chart configuration
-## for more options see https://github.com/bitnami/charts/tree/main/bitnami/postgresql
-##
-postgresql:
-  ## Only enable this if you don't have an external database
-  ## When enabled, all database URLs will default to using this database
-  enabled: false
-  global:
-    postgresql:
-      # global.postgresql.auth overrides postgresql.auth
-      auth:
-        username: sogo
-        password: changeme
-        database: sogo
-        # Name of existing secret to use for PostgreSQL credentials.
-        # auth.postgresPassword, auth.password, and auth.replicationPassword will be ignored and picked up from this secret.
-        # secret might also contains the key ldap-password if LDAP is enabled.
-        # ldap.bind_password will be ignored and picked from this secret in this case.
-        existingSecret: ""
-        # Names of keys in existing secret to use for PostgreSQL credentials
-        secretKeys:
-          adminPasswordKey: ""
-          userPasswordKey: ""
-          replicationPasswordKey: ""
-  primary:
-    persistence:
-      enabled: false
-      # Use an existing Persistent Volume Claim (must be created ahead of time)
-      # existingClaim: ""
-      # storageClass: ""
-
-##
-## MariaDB chart configuration
-## ref: https://github.com/bitnami/charts/tree/main/bitnami/mariadb
-##
-mariadb:
-  ## Only enable this if you don't have an external database
-  ## When enabled, all database URLs will default to using this database
-  enabled: false
-
-  auth:
-    database: sogo
-    username: sogo
-    password: changeme
-    # Use existing secret (auth.rootPassword, auth.password, and auth.replicationPassword will be ignored).
-    # secret must contain the keys mariadb-root-password, mariadb-replication-password and mariadb-password
-    existingSecret: ""
-
-  architecture: standalone
-
-  ## Enable persistence using Persistent Volume Claims
-  ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
-  ##
-  primary:
-    persistence:
-      enabled: false
-      # Use an existing Persistent Volume Claim (must be created ahead of time)
-      # existingClaim: ""
-      # storageClass: ""
-      accessMode: ReadWriteOnce
-      size: 8Gi
+## Databases are not bundled. Point sogo.configs at an external PostgreSQL or
+## MariaDB server; the README's "Databases" section shows how to wire one up
+## with an operator such as CloudNativePG or mariadb-operator.
 
 ##
 ## Memcached chart configuration
-## ref: https://github.com/bitnami/charts/tree/main/bitnami/memcached
+## Built-in memcached (official docker.io/memcached image)
 ##
 memcached:
-  ## Only enable this if you don't have an external database
   enabled: true
+  image:
+    repository: docker.io/memcached
+    tag: 1.6-alpine
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  maxItemMemory: 64
+  maxConnections: 1024
+  extraArgs: []
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
 
 ## Enable pod autoscaling using HorizontalPodAutoscaler
 ## ref: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/

@@ -34,11 +34,6 @@ spec:
         {{- if .Values.memcached.enabled }}
         {{ template "sogo.memcached.fullname" . }}-client: "true"
         {{- end }}
-        {{- if .Values.mariadb.enabled }}
-        {{ template "sogo.mariadb.fullname" . }}-client: "true"
-        {{- else if .Values.postgresql.enabled }}
-        {{ template "sogo.postgresql.fullname" . }}-client: "true"
-        {{- end }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -208,12 +203,6 @@ spec:
               subPath: existing-secrets.yaml
               readOnly: true
             {{- end }}
-            {{- if or .Values.mariadb.enabled .Values.postgresql.enabled }}
-            - name: sogo-configs
-              mountPath: /etc/sogo/sogo.conf.d/98-internal-db.yaml
-              subPath: internal-db
-              readOnly: true
-            {{- end }}
             {{- if .Values.memcached.enabled }}
             - name: sogo-configs
               mountPath: /etc/sogo/sogo.conf.d/98-internal-memcached.yaml
@@ -312,9 +301,9 @@ spec:
                 curl -L -o /customizations/helm.ico "$FAVICON_URL"
               fi
 
-        {{- if or .Values.mariadb.enabled (eq (include "sogo.db.parsed.type" .) "mysql") }}
+        {{- if eq (include "sogo.db.parsed.type" .) "mysql" }}
         - name: mariadb-isalive
-          image: {{ .Values.mariadb.image.registry | default "docker.io" }}/{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}
+          image: docker.io/mariadb:11.4
           env:
             - name: MYSQL_USER
               valueFrom:
@@ -327,16 +316,16 @@ spec:
                   name: {{ printf "%s-db" .Release.Name }}
                   key: db-password
             - name: MYSQL_HOST
-              value: {{ include "sogo.mariadb.fullname" . }}
+              value: {{ include "sogo.db.parsed.hostname" . }}
             - name: MYSQL_PORT
-              value: {{ include "sogo.db.parsed.port" . | default (ternary "3306" "" .Values.mariadb.enabled) | quote }}
+              value: {{ include "sogo.db.parsed.port" . | default "3306" | quote }}
           command:
             - "sh"
             - "-c"
             - "until mariadb --host=${MYSQL_HOST} --port=${MYSQL_PORT} --user=${MYSQL_USER} --password=${MYSQL_PASSWORD} --execute=\"SELECT 1;\"; do echo waiting for mysql; sleep 2; done;"
-        {{- else if or .Values.postgresql.enabled (eq (include "sogo.db.parsed.type" .) "postgresql") }}
+        {{- else if eq (include "sogo.db.parsed.type" .) "postgresql" }}
         - name: postgresql-isready
-          image: {{ .Values.postgresql.image.registry | default "docker.io"  }}/{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}
+          image: docker.io/postgres:16-trixie
           env:
             - name: POSTGRES_USER
               valueFrom:
@@ -344,9 +333,9 @@ spec:
                   name: {{ printf "%s-db" .Release.Name }}
                   key: db-username
             - name: POSTGRES_HOST
-              value: {{ include "sogo.postgresql.fullname" . }}
+              value: {{ include "sogo.db.parsed.hostname" . }}
             - name: POSTGRES_PORT
-              value: {{ include "sogo.db.parsed.port" . | default (ternary "5432" "" .Values.postgresql.enabled) | quote }}
+              value: {{ include "sogo.db.parsed.port" . | default "5432" | quote }}
           command:
             - "sh"
             - "-c"

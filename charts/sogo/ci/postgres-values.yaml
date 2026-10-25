@@ -1,3 +1,4 @@
+useTestResourcesDevDatabase: true
 sogo:
   configs:
     SOGoPageTitle: SOGo
@@ -10,16 +11,9 @@ sogo:
     SOGoLanguage: English
     SOGoTimeZone: America/Montreal
     WOWorkersCount: 5
-postgresql:
-  enabled: true
-  global:
-    postgresql:
-      auth:
-        username: sogo
-        password: changeme
-        database: sogo
-  primary:
-    persistence:
-      enabled: false
+    SOGoProfileURL: postgresql://postgres:test123@test-postgres:5432/sogo/sogo_user_profile
+    OCSFolderInfoURL: postgresql://postgres:test123@test-postgres:5432/sogo/sogo_folder_info
+    OCSSessionsFolderURL: postgresql://postgres:test123@test-postgres:5432/sogo/sogo_sessions_folder
+    OCSAdminURL: postgresql://postgres:test123@test-postgres:5432/sogo/sogo_admin
 memcached:
   enabled: true
