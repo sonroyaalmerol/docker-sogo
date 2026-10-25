@@ -88,6 +88,31 @@ helm install sogo sogo/sogo --create-namespace --namespace sogo
 
 You can find the `values.yaml` summary in [the charts directory](https://github.com/sonroyaalmerol/docker-sogo/blob/main/charts/sogo/values.yaml). The SOGo configurations in YAML can be placed in the `values.yaml` file in `.sogo.configs` as set in the default values. See how to convert your current SOGo configs to YAML with examples below.
 
+### Databases
+
+The chart does not bundle a database. SOGo needs external PostgreSQL or MariaDB URLs, and the render fails with a clear message when none is configured. Run the database with an operator, then point `sogo.configs` (or `sogo.secrets` for credentials) at it.
+
+Recommended operators:
+
+- [CloudNativePG](https://cloudnative-pg.io) for PostgreSQL - CNCF project providing backups, failover and PITR. Its `Cluster` resource exposes credentials in a secret named `<cluster>-app`, and the primary is reachable at `<cluster>-rw.<namespace>.svc:5432`.
+- [mariadb-operator](https://github.com/mariadb-operator/mariadb-operator) for MariaDB - provisions `MariaDB` resources with automated backups and replication; the primary service is reachable at the resource name in the same namespace.
+
+Example with CloudNativePG:
+
+```yaml
+sogo:
+  configs:
+    OCSFolderInfoURL: postgresql://sogo:REPLACED@sogo-db-rw.sogo.svc:5432/sogo/sogo_folder_info
+    SOGoProfileURL: postgresql://sogo:REPLACED@sogo-db-rw.sogo.svc:5432/sogo/sogo_user_profile
+    OCSSessionsFolderURL: postgresql://sogo:REPLACED@sogo-db-rw.sogo.svc:5432/sogo/sogo_sessions_folder
+    OCSAdminURL: postgresql://sogo:REPLACED@sogo-db-rw.sogo.svc:5432/sogo/sogo_admin
+```
+
+Since credentials belong in a Secret rather than values files, prefer `sogo.secrets` or `sogo.existingSecrets` and read the password from the operator's secret (`sogo-db-app` in the example above).
+
+> [!NOTE]
+> Older chart versions shipped Bitnami `postgresql` and `mariadb` subcharts. Bitnami moved its images to a legacy repository and the pinned tags no longer pull, so the subcharts were removed. To migrate, `pg_dump`/`mysqldump` from the old PVC into an operator-managed database, then set the URLs above.
+
 ### Configuration Examples
 
 > [!IMPORTANT]
