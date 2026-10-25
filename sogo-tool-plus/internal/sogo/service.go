@@ -11,6 +11,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/sonroyaalmerol/sogo-tool-plus/internal/memcached"
 	"howett.net/plist"
 )
 
@@ -49,13 +50,8 @@ func NewSogoService(configFile string) (*SogoService, error) {
 			"Connecting to ACL database (%s driver)...",
 			s.aclConfig.Driver,
 		)
-		s.aclDB, err = sql.Open(s.aclConfig.Driver, s.aclConfig.DSN)
-		if err != nil {
-			return nil, fmt.Errorf("failed to open ACL DB connection: %w", err)
-		}
-		if err := s.aclDB.Ping(); err != nil {
-			s.aclDB.Close()
-			return nil, fmt.Errorf("failed to ping ACL DB: %w", err)
+		if s.aclDB, err = openDB(s.aclConfig, "ACL"); err != nil {
+			return nil, err
 		}
 		log.Println("ACL database connection successful.")
 	}
@@ -64,16 +60,9 @@ func NewSogoService(configFile string) (*SogoService, error) {
 		"Connecting to Users database (%s driver)...",
 		s.usersConfig.Driver,
 	)
-	s.usersDB, err = sql.Open(s.usersConfig.Driver, s.usersConfig.DSN)
-	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to open Users DB connection: %w",
-			err,
-		)
-	}
-	if err := s.usersDB.Ping(); err != nil {
-		s.usersDB.Close()
-		return nil, fmt.Errorf("failed to ping Users DB: %w", err)
+	if s.usersDB, err = openDB(s.usersConfig, "Users"); err != nil {
+		s.Close()
+		return nil, err
 	}
 	log.Println("Users database connection successful.")
 
@@ -81,18 +70,18 @@ func NewSogoService(configFile string) (*SogoService, error) {
 		"Connecting to Sessions database (%s driver)...",
 		s.sessionsConfig.Driver,
 	)
-	s.sessionsDB, err = sql.Open(s.sessionsConfig.Driver, s.sessionsConfig.DSN)
-	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to open Sessions DB connection: %w",
-			err,
-		)
-	}
-	if err := s.sessionsDB.Ping(); err != nil {
-		s.sessionsDB.Close()
-		return nil, fmt.Errorf("failed to ping Sessions DB: %w", err)
+	if s.sessionsDB, err = openDB(s.sessionsConfig, "Sessions"); err != nil {
+		s.Close()
+		return nil, err
 	}
 	log.Println("Sessions database connection successful.")
+
+	s.cache, err = memcached.New(configFile)
+	if err != nil {
+		log.Printf("WARNING: could not read SOGoMemcachedHost: %v", err)
+	} else if s.cache == nil {
+		log.Println("WARNING: SOGoMemcachedHost is not set; expired sessions will stay cached until SOGoCacheCleanupInterval elapses.")
+	}
 
 	return s, nil
 }
@@ -181,7 +170,8 @@ func parseSogoDSN(sogoURL string) (DBConfig, error) {
 			if sslmode := os.Getenv("PGSSLMODE"); sslmode != "" {
 				query.Set("sslmode", sslmode)
 			} else {
-				query.Set("sslmode", "prefer")
+				query.Set("sslmode", "require")
+				query.Set(sslFallbackParam, "1")
 			}
 		}
 		dsnURL.RawQuery = query.Encode()
@@ -217,18 +207,10 @@ func parseSogoDSN(sogoURL string) (DBConfig, error) {
 		}, nil
 
 	case "oracle":
-		// Build Oracle EZConnect DSN: user/pass@host:port/servicename
-		var user, pass string
-		if parsedURL.User != nil {
-			user = parsedURL.User.Username()
-			pass, _ = parsedURL.User.Password()
-		}
-		dsn := fmt.Sprintf("%s/%s@%s/%s", user, pass, parsedURL.Host, dbName)
-		return DBConfig{
-			Driver: "oracle",
-			DSN:    dsn,
-			Table:  tableName,
-		}, nil
+		return DBConfig{}, fmt.Errorf(
+			"Oracle is not supported by sogo-tool-plus (no driver is compiled in); URL '%s'",
+			sogoURL,
+		)
 
 	default:
 		return DBConfig{}, fmt.Errorf(
@@ -265,9 +247,18 @@ func (s *SogoService) userProfileExists(uid string) (bool, error) {
 }
 
 func (s *SogoService) initializeUserProfile(uid string) error {
+	var conflict string
+	switch s.usersConfig.Driver {
+	case "postgres":
+		conflict = " ON CONFLICT (c_uid) DO NOTHING"
+	case "mysql":
+		conflict = " ON DUPLICATE KEY UPDATE c_uid = c_uid"
+	}
+
 	sqlStmt := s.usersConfig.normalize(fmt.Sprintf(
-		`INSERT INTO %s (c_uid, c_settings) VALUES (?, ?)`,
+		`INSERT INTO %s (c_uid, c_settings) VALUES (?, ?)%s`,
 		s.usersConfig.Table,
+		conflict,
 	))
 	_, err := s.usersDB.Exec(sqlStmt, uid, `{"Calendar": {}}`)
 	if err != nil {
