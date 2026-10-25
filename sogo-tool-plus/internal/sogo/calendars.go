@@ -148,6 +148,7 @@ func (s *SogoService) CalSubscribeAll() error {
 	defer rows.Close()
 
 	var subscriptions []subscription
+	seen := make(map[subscription]struct{})
 
 	for rows.Next() {
 		var cObject, cUid string
@@ -167,6 +168,16 @@ func (s *SogoService) CalSubscribeAll() error {
 			continue
 		}
 
+		target, ok := utils.SubscribeTarget(cUid)
+		if !ok {
+			log.Printf(
+				"Skipping non-user ACL principal '%s' on '%s'",
+				cUid,
+				cObject,
+			)
+			continue
+		}
+
 		owner, parsedPath, err := utils.ParsePath(cObject)
 		if err != nil {
 			log.Printf(
@@ -176,21 +187,26 @@ func (s *SogoService) CalSubscribeAll() error {
 			continue
 		}
 
-		if owner == cUid {
+		if owner == target {
 			log.Printf(
 				"Skipping self-subscription for user '%s' to calendar '%s'",
-				cUid,
+				target,
 				parsedPath,
 			)
 			continue
 		}
 
-		subscriptions = append(subscriptions, subscription{
+		sub := subscription{
 			owner:        owner,
 			parsedPath:   parsedPath,
-			user:         cUid,
+			user:         target,
 			calendarPath: cObject,
-		})
+		}
+		if _, dup := seen[sub]; dup {
+			continue
+		}
+		seen[sub] = struct{}{}
+		subscriptions = append(subscriptions, sub)
 	}
 	if err := rows.Err(); err != nil {
 		log.Printf("Error iterating ACL rows during cal-subscribe-all: %v", err)
