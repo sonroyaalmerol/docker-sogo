@@ -1,4 +1,4 @@
-FROM golang:1.24 as tool_plus_builder
+FROM golang:1.27 AS tool_plus_builder
 WORKDIR /app
 
 COPY ./sogo-tool-plus/go.mod ./sogo-tool-plus/go.sum ./
@@ -7,7 +7,7 @@ COPY ./sogo-tool-plus/. .
 
 RUN go build -o sogo-tool-plus ./cmd
 
-FROM golang:1.24 as generator_builder
+FROM golang:1.27 AS generator_builder
 WORKDIR /app
 
 COPY ./config-generator/go.mod ./config-generator/go.sum ./
@@ -76,7 +76,7 @@ COPY patches/ /tmp/patches/
 
 RUN if [ "$SKIP_PATCHES" != "true" ]; then \
         for p in $(ls /tmp/patches/*.patch | sort); do \
-            echo "Applying $p" && patch -p1 -d /tmp/SOGo < "$p"; \
+            echo "Applying $p" && patch -p1 --no-backup-if-mismatch -d /tmp/SOGo < "$p"; \
         done; \
     else \
         echo "Skipping patches (SKIP_PATCHES=true)"; \
