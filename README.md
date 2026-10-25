@@ -34,10 +34,13 @@ This container is mainly built with Kubernetes in mind. As such, one of the main
 
 To make things simpler, the container will mainly follow SOGo's versioning with the addition of a `revision` tag which will serve as an additional incremental versioning system for each container-specific modifications I push through a certain SOGo version. This way, features that I implement for the container can and will be backported to previous SOGo versions while having automated builds for new SOGo releases at the same time. For stability and pinning, you will want to use the tag with the container revision.
 
-- `latest` (will always follow the latest container revision of the latest SOGo version)
-- `${SOGo-version}` (e.g. `5.10.0`)
-- `${SOGo-version}-${Container-Revision}` (e.g. `5.10.0-1`)
-- `${SOGo-version}-vanilla` (e.g. `5.10.0-1-vanilla`, unpatched SOGo — see [Patches](#patches))
+Unsuffixed tags are **vanilla** (upstream SOGo sources, no modifications). Tags suffixed with `-patched` carry the extra patches described in [Patches](#patches).
+
+- `latest` (will always follow the latest container revision of the latest SOGo version, vanilla)
+- `${SOGo-version}` (e.g. `5.12.12`, vanilla)
+- `${SOGo-version}-${Container-Revision}` (e.g. `5.12.12-1`, vanilla)
+- `${SOGo-version}-patched` (e.g. `5.12.12-patched`)
+- `${SOGo-version}-${Container-Revision}-patched` (e.g. `5.12.12-1-patched`)
 
 ## Why did I build this container?
 
@@ -193,7 +196,7 @@ If you want to use the usual OpenStep plist config instead, just mount your exis
 
 ## Patches
 
-The following patches are applied to the SOGo source at build time. They are located in `patches/` and applied in sorted order.
+The following patches are applied to the SOGo source at build time. They are located in `patches/` and applied in sorted order. Prebuilt images carrying them are published under the `-patched` tags (see [Supported tags](#supported-tags)); unsuffixed tags are vanilla.
 
 ### Skipping Patches
 

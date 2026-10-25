@@ -1,8 +1,8 @@
 ---
 name: Release image
-on:  # yamllint disable-line rule:truthy
+on: # yamllint disable-line rule:truthy
   schedule:
-    - cron: '0 0 * * *'
+    - cron: "0 0 * * *"
   workflow_dispatch:
 
 jobs:
@@ -27,19 +27,19 @@ jobs:
 
           VERSION=$(echo "$RAW_LATEST_RELEASE" | jq -r '.tag_name')
           echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
-      
+
           BASE_VERSION=$(echo "$VERSION" | sed 's/-.*//')
           echo "BASE_VERSION=$BASE_VERSION" >> "$GITHUB_OUTPUT"
-      
+
           REVISION=$([[ "$VERSION" == *-* ]] && echo "$VERSION" | sed 's/.*-//' || echo "")
           echo "REVISION=$REVISION" >> "$GITHUB_OUTPUT"
-      
+
           if [ "$BASE_VERSION" != "${{ steps.sogo.outputs.VERSION }}" ]; then
             NEXT_REVISION=1
           else
             NEXT_REVISION=$([[ "$REVISION" =~ ^[0-9]+$ ]] && echo $(($REVISION + 1)) || echo 1)
           fi
-      
+
           echo "NEXT_REVISION=$NEXT_REVISION" >> "$GITHUB_OUTPUT"
 
       - name: Decide if release version or not
@@ -51,7 +51,7 @@ jobs:
           ACTION_TRIGGER: ${{github.event_name}}
         run: |
           VERSIONS_ARE_EQUAL=$([ "$SOGO_VERSION" = "$DOCKER_VERSION" ] && echo "true" || echo "false")
-          
+
           if [ "$ACTION_TRIGGER" = "workflow_dispatch" ] || [ "$VERSIONS_ARE_EQUAL" != "true" ]; then
             RELEASE="true"
           else
@@ -61,7 +61,7 @@ jobs:
           echo "RELEASE=$RELEASE" >> "$GITHUB_OUTPUT"
 
   release:
-    name: Release - Docker image
+    name: Release - Vanilla (unpatched) image
     needs: check_versions
     runs-on: ubuntu-latest
     if: needs.check_versions.outputs.release == 'true'
@@ -117,16 +117,17 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             SOGO_VERSION=${{ needs.check_versions.outputs.base_version }}
+            SKIP_PATCHES=true
 
       - name: Github Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.check_versions.outputs.base_version }}-${{ needs.check_versions.outputs.next_revision }}
-          make_latest: 'true'
+          make_latest: "true"
           generate_release_notes: true
           body: |
             SOGo Update: https://github.com/Alinto/sogo/releases/tag/SOGo-${{ needs.check_versions.outputs.base_version }}
-      
+
       - name: Update Chart AppVersion
         env:
           APP_VERSION: ${{needs.check_versions.outputs.base_version}}
@@ -136,15 +137,15 @@ jobs:
 
           sed -i 's|sonroyaalmerol/docker-sogo:[^ ]*|sonroyaalmerol/docker-sogo:'"$APP_VERSION"'-'"$DOCKER_REVISION"'|g' "$CHART_PATH"
           sed -i 's/^appVersion:.*$/appVersion: '"$APP_VERSION"'/' "$CHART_PATH"
-          
+
       - name: Commit files and push it
         run: |
           git add .
           git commit -m "chore: bump container versions in chart"
           git push
-  
-  release_vanilla:
-    name: Release - Vanilla (unpatched) image
+
+  release_patched:
+    name: Release - Patched image
     needs: check_versions
     runs-on: ubuntu-latest
     if: needs.check_versions.outputs.release == 'true'
@@ -179,7 +180,8 @@ jobs:
             ${{ github.repository }}
             ghcr.io/${{ github.repository }}
           tags: |
-            type=raw,value=${{ needs.check_versions.outputs.base_version }}-${{ needs.check_versions.outputs.next_revision }}-vanilla
+            type=raw,value=${{ needs.check_versions.outputs.base_version }}-patched
+            type=raw,value=${{ needs.check_versions.outputs.base_version }}-${{ needs.check_versions.outputs.next_revision }}-patched
           flavor: latest=false
 
       - name: Docker - Build / Push
@@ -192,7 +194,6 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             SOGO_VERSION=${{ needs.check_versions.outputs.base_version }}
-            SKIP_PATCHES=true
 
   release_helm:
     needs: release

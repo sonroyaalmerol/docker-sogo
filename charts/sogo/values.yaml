@@ -1,6 +1,9 @@
 ## docker-sogo image version
 ## ref: https://hub.docker.com/r/sonroyaalmerol/docker-sogo/tags/
 ##
+## Unsuffixed tags are vanilla (unpatched). Use a `-patched` tag for the
+## patched variant, e.g. tag: 5.12.12-1-patched
+##
 image:
   repository: sonroyaalmerol/docker-sogo
   tag:
