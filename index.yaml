@@ -4,6 +4,41 @@ entries:
   - annotations:
       artifacthub.io/images: |
         - name: docker-sogo
+          image: sonroyaalmerol/docker-sogo:5.12.12-3
+      artifacthub.io/license: MIT
+      artifacthub.io/links: |
+        - name: GitHub source
+          url: https://github.com/sonroyaalmerol/docker-sogo/
+      artifacthub.io/screenshots: |
+        - title: SOGo
+          url: https://www.sogo.nu/img/screenshot.png
+    apiVersion: v2
+    appVersion: 5.12.12
+    created: "2026-10-25T04:48:02.806347703Z"
+    description: A helm chart for the docker-sogo docker image
+    digest: f8b23bf48611ca75181d5741b2defbbc7baed16b99c927927d7872114b82b303
+    home: https://github.com/sonroyaalmerol/docker-sogo
+    icon: https://www.sogo.nu/img/sogo.svg
+    keywords:
+    - sogo
+    - alinto
+    - inverse
+    - mail
+    - calendar
+    maintainers:
+    - email: sogo@snry.me
+      name: Son Roy Almerol
+      url: https://github.com/sonroyaalmerol
+    name: sogo
+    sources:
+    - https://github.com/sonroyaalmerol/docker-sogo
+    type: application
+    urls:
+    - https://github.com/sonroyaalmerol/docker-sogo/releases/download/chart-0.4.0/sogo-0.4.0.tgz
+    version: 0.4.0
+  - annotations:
+      artifacthub.io/images: |
+        - name: docker-sogo
           image: sonroyaalmerol/docker-sogo:5.12.4-3
       artifacthub.io/license: MIT
       artifacthub.io/links: |
@@ -1057,4 +1092,4 @@ entries:
     urls:
     - https://github.com/sonroyaalmerol/docker-sogo/releases/download/chart-0.1.0/sogo-0.1.0.tgz
     version: 0.1.0
-generated: "2026-02-04T19:56:57.516445597Z"
+generated: "2026-10-25T04:48:02.806563825Z"
