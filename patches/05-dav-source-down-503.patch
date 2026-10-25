@@ -1,0 +1,154 @@
+--- a/SoObjects/SOGo/SOGoUserManager.h
++++ b/SoObjects/SOGo/SOGoUserManager.h
+@@ -52,6 +52,12 @@
+ 
+ + (id) sharedUserManager;
+ 
++/* Per-thread (per-request) flag telling whether the last -checkLogin:...
++   call failed because the authentication source was unreachable rather
++   than because the credentials were wrong. */
+++ (void) setAuthenticationSourceUnreachable: (BOOL) unreachable;
+++ (BOOL) isAuthenticationSourceUnreachable;
++
+ - (NSString *) registryClass;
+ 
+ - (NSArray *) sourcesInDomain: (NSString *) domain;
+--- a/SoObjects/SOGo/SOGoUserManager.m
++++ b/SoObjects/SOGo/SOGoUserManager.m
+@@ -19,6 +19,7 @@
+  */
+ 
+ #import <Foundation/NSAutoreleasePool.h>
++#import <Foundation/NSThread.h>
+ 
+ #import <NGExtensions/NSNull+misc.h>
+ #import <NGExtensions/NSObject+Logs.h>
+@@ -107,6 +108,19 @@
+   return sharedUserManager;
+ }
+ 
+++ (void) setAuthenticationSourceUnreachable: (BOOL) unreachable
++{
++  [[[NSThread currentThread] threadDictionary]
++    setObject: [NSNumber numberWithBool: unreachable]
++       forKey: @"SOGoAuthenticationSourceUnreachable"];
++}
++
+++ (BOOL) isAuthenticationSourceUnreachable
++{
++  return [[[[NSThread currentThread] threadDictionary]
++            objectForKey: @"SOGoAuthenticationSourceUnreachable"] boolValue];
++}
++
+ - (BOOL) _registerSource: (NSDictionary *) udSource
+                 inDomain: (NSString *) domain
+ {
+@@ -592,6 +606,8 @@
+   SOGoSystemDefaults *sd;
+   BOOL checkOK;
+ 
++  [[self class] setAuthenticationSourceUnreachable: NO];
++
+   if (!_login)
+     return NO;
+ 
+@@ -778,14 +794,23 @@
+           setUserAttributes: [currentUser jsonRepresentation]
+                    forLogin: username];
+       }
+-    else if (sourceDown && useCache && currentUser)
++    else if (sourceDown)
+       {
+-        // LDAP server is unreachable - fall back to cached password hashes
+-        NSArray *cachedPasswords = [currentUser objectForKey: @"passwords"];
++        // Authentication source is unreachable - fall back to cached password hashes
++        NSArray *cachedPasswords = ((useCache && currentUser)
++                                    ? [currentUser objectForKey: @"passwords"]
++                                    : nil);
+         if (cachedPasswords && [cachedPasswords containsObject: sha1pwd])
+           checkOK = YES;
+         else
+-          checkOK = NO;
++          {
++            // The credentials were never actually evaluated against the
++            // source, so this is not an authentication failure. Flag it so
++            // callers can answer "service unavailable" instead of
++            // "invalid credentials".
++            checkOK = NO;
++            [[self class] setAuthenticationSourceUnreachable: YES];
++          }
+       }
+     else
+       {
+--- a/SoObjects/SOGo/SOGoDAVAuthenticator.m
++++ b/SoObjects/SOGo/SOGoDAVAuthenticator.m
+@@ -21,10 +21,13 @@
+ */
+ 
+ #import <Foundation/NSArray.h>
++#import <Foundation/NSData.h>
+ #import <Foundation/NSURL.h>
+ 
+ #import <NGObjWeb/WOContext.h>
+ #import <NGObjWeb/WORequest.h>
++#import <NGObjWeb/WOResponse.h>
++#import <NGObjWeb/NSException+HTTP.h>
+ #import <NGExtensions/NSObject+Logs.h>
+ 
+ #import "SOGoCASSession.h"
+@@ -86,6 +89,55 @@
+   return rc;
+ }
+ 
++/* When the authentication source (LDAP, ...) is unreachable the credentials
++   were never evaluated, so answering 401 is wrong: DAV clients treat it as
++   "invalid authentication" and drop or re-prompt for stored credentials.
++   RFC 4918 section 11 maps this situation onto 503, which clients retry. */
++- (WOResponse *) _sourceUnavailableInContext: (WOContext *) _ctx
++{
++  WOResponse *r;
++
++  r = [_ctx response];
++  [r setStatus: 503 /* service unavailable */];
++  /* Drop any authentication challenge super may already have emitted: the
++     credentials were never evaluated, so this must not look like one. */
++  [r setHeaders: [NSArray array] forKey: @"www-authenticate"];
++  [r setHeader: @"60" forKey: @"retry-after"];
++  [r setHeader: @"text/plain; charset=utf-8" forKey: @"content-type"];
++  [r setContent: [NSData data]];
++  [r appendContentString: @"Authentication source unavailable"];
++
++  [self logWithFormat: @"authentication source unreachable,"
++        @" answering 503 instead of 401"];
++
++  return r;
++}
++
++- (WOResponse *) preprocessCredentialsInContext: (WOContext *) _ctx
++{
++  WOResponse *r;
++
++  r = [super preprocessCredentialsInContext: _ctx];
++  if (r && [r status] == 401
++      && [SOGoUserManager isAuthenticationSourceUnreachable])
++    r = [self _sourceUnavailableInContext: _ctx];
++
++  return r;
++}
++
++- (BOOL) renderException: (NSException *) _e
++               inContext: (WOContext *) _ctx
++{
++  if ([_e httpStatus] == 401
++      && [SOGoUserManager isAuthenticationSourceUnreachable])
++    {
++      [self _sourceUnavailableInContext: _ctx];
++      return YES;
++    }
++
++  return [super renderException: _e inContext: _ctx];
++}
++
+ - (NSArray *)getCookiesIfNeeded: (WOContext *)_ctx
+ {
+   //Needs to be override by children if needed

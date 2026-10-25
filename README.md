@@ -243,6 +243,20 @@ Adds support for reverse proxy cookie-based authentication.
 
 Handles CORS and AJAX redirect issues with OIDC authentication flows.
 
+### `05-dav-source-down-503.patch`
+
+**Files:** `SOGoUserManager.h`, `SOGoUserManager.m`, `SOGoDAVAuthenticator.m`
+
+Stops CalDAV/CardDAV from reporting an authentication failure when the cause is an unreachable authentication backend.
+
+- A `401 Unauthorized` tells a DAV client its credentials are wrong. Thunderbird, DAVx5, Evolution and the Apple clients react by re-prompting the user or disabling the account, so an LDAP outage turns into broken clients and support tickets.
+- `SOGoUserManager` now records, per request thread, whether the last `-checkLogin:` failed because the source was unreachable rather than because the password was rejected. This builds on the `sourceDown` plumbing added by `01-ldap-multi-password.patch` and only trips after the offline cache fallback has also failed.
+- `SOGoDAVAuthenticator` overrides `-preprocessCredentialsInContext:` and `-renderException:inContext:` to turn that case into `503 Service Unavailable` with `Retry-After: 60` and no `WWW-Authenticate` header. DAV clients back off and retry instead of discarding credentials.
+- A successful offline cache hit still authenticates normally, and a genuinely wrong password still returns `401`.
+- Scoped to DAV and ActiveSync only; the web UI login is untouched.
+
+**Depends on `01-ldap-multi-password.patch`** and must be applied after it.
+
 ## Future Plans
 
 Future plans would mainly be having a Helm Chart to deploy this Docker container. Any automation or scripts that will make it easier to build the Helm Chart would be part of the plans. Environment Variables for configuration is also in consideration.
