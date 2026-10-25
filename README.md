@@ -213,6 +213,22 @@ Every replica mounts the same crontab, so at `replicaCount: 3` each entry fires 
 
 The first replica to `ADD` the key runs the job, the rest log a skip and exit 0. The lock is released as soon as the job finishes, and the TTL bounds it so a pod that is killed mid-run cannot wedge the schedule. Missing or unreachable memcached fails open and runs the job, so a cache outage never silently stops alarm mail on a single-replica install. Set `sogo.cronSingleton.enabled: false` to go back to unwrapped commands.
 
+### Cleaning up after older images
+
+Images before `5.12.12-3` expired sessions with a bare `DELETE`, leaving the matching `session:<id>` entry in memcached. Because SOGo reads the cache before the database, those sessions stayed usable until the entry aged out. The fix evicts both, but entries stranded by the old code cannot be enumerated and will expire on their own within `SOGoCacheCleanupInterval`.
+
+The same older builds passed ACL principals such as `@group` and `<default>` straight to `sogo-tool manage-acl`. Most were rejected by SOGo's directory lookup and did nothing, but a resolvable one could leave a `sogo_user_profile` row keyed by the principal instead of a login. To find and remove them:
+
+```bash
+# report only
+sogo-tool-plus -mode cli -action cleanup-bogus-profiles
+
+# actually delete
+sogo-tool-plus -mode cli -action cleanup-bogus-profiles -apply
+```
+
+It never touches `anonymous`, which SOGo uses as a real account for public access.
+
 ### Drafts and attachments
 
 In-progress drafts and their uploaded attachments are written to local disk under `SOGoMailSpoolPath`, not to IMAP or the database. A compose started on one pod is therefore incomplete on another. Pick one of:
