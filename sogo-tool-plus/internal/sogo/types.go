@@ -3,6 +3,8 @@ package sogo
 import (
 	"database/sql"
 	"sync"
+
+	"github.com/bradfitz/gomemcache/memcache"
 )
 
 type SOGoConfig struct {
@@ -21,6 +23,7 @@ type SogoService struct {
 	aclDB          *sql.DB
 	usersDB        *sql.DB
 	sessionsDB     *sql.DB
+	cache          *memcache.Client
 	aclConfig      DBConfig
 	usersConfig    DBConfig
 	sessionsConfig DBConfig

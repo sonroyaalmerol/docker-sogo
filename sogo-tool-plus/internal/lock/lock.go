@@ -8,55 +8,19 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
-	"howett.net/plist"
+	"github.com/sonroyaalmerol/sogo-tool-plus/internal/memcached"
 )
 
-const (
-	keyPrefix           = "sogo-tool-plus:lock:"
-	defaultMemcachePort = "11211"
-)
-
-type memcachedConfig struct {
-	Host string `plist:"SOGoMemcachedHost"`
-}
+const keyPrefix = "sogo-tool-plus:lock:"
 
 // Lock is a held memcached mutex; a nil Lock means the caller should proceed uncoordinated.
 type Lock struct {
 	client *memcache.Client
 	key    string
 	holder string
-}
-
-// MemcachedHosts reads SOGoMemcachedHost from a SOGo plist; empty means not configured.
-func MemcachedHosts(configFile string) ([]string, error) {
-	f, err := os.Open(configFile)
-	if err != nil {
-		return nil, fmt.Errorf("could not open config file %q: %w", configFile, err)
-	}
-	defer f.Close()
-
-	var cfg memcachedConfig
-	if err := plist.NewDecoder(f).Decode(&cfg); err != nil {
-		return nil, fmt.Errorf("could not decode plist config: %w", err)
-	}
-
-	var hosts []string
-	for _, raw := range strings.Split(cfg.Host, ",") {
-		host := strings.TrimSpace(raw)
-		if host == "" {
-			continue
-		}
-		if !strings.HasPrefix(host, "/") && !strings.Contains(host, ":") {
-			host += ":" + defaultMemcachePort
-		}
-		hosts = append(hosts, host)
-	}
-
-	return hosts, nil
 }
 
 func newHolder() string {
@@ -75,18 +39,15 @@ func newHolder() string {
 // holder owns it. Missing or unreachable memcached fails open so a cache outage never
 // silently stops scheduled work.
 func Acquire(configFile, name string, ttl time.Duration) (lock *Lock, acquired bool) {
-	hosts, err := MemcachedHosts(configFile)
+	client, err := memcached.New(configFile)
 	if err != nil {
 		log.Printf("lock: cannot read %s (%v), running without coordination", configFile, err)
 		return nil, true
 	}
-	if len(hosts) == 0 {
+	if client == nil {
 		log.Printf("lock: SOGoMemcachedHost is not set, running without coordination")
 		return nil, true
 	}
-
-	client := memcache.New(hosts...)
-	client.Timeout = 2 * time.Second
 
 	holder := newHolder()
 	item := &memcache.Item{
