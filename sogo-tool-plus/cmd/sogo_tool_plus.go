@@ -5,14 +5,59 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
+	"os/exec"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
+	"github.com/sonroyaalmerol/sogo-tool-plus/internal/lock"
 	"github.com/sonroyaalmerol/sogo-tool-plus/internal/sogo"
 	"github.com/sonroyaalmerol/sogo-tool-plus/internal/web"
 )
+
+func runLocked(configFile, key string, ttl time.Duration, argv []string) int {
+	if len(argv) == 0 {
+		log.Fatal("Missing command to run after '--' for mode 'lock'")
+	}
+	if key == "" {
+		log.Fatal("Missing required flag: -key for mode 'lock'")
+	}
+
+	held, acquired := lock.Acquire(configFile, key, ttl)
+	if !acquired {
+		return 0
+	}
+	defer held.Release()
+
+	cmd := exec.Command(argv[0], argv[1:]...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+	defer signal.Stop(signals)
+	go func() {
+		if sig, ok := <-signals; ok && cmd.Process != nil {
+			_ = cmd.Process.Signal(sig)
+		}
+	}()
+
+	if err := cmd.Run(); err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			return exitErr.ExitCode()
+		}
+		log.Printf("Failed to run %q: %v", argv[0], err)
+		return 1
+	}
+
+	return 0
+}
 
 func runWebServer(service *sogo.SogoService, addr string) {
 	handler := web.NewWebHandler(service)
@@ -75,7 +120,7 @@ func main() {
 	mode := flag.String(
 		"mode",
 		"cli",
-		"Operation mode: 'cli' or 'server'",
+		"Operation mode: 'cli', 'server', or 'lock'",
 	)
 	action := flag.String(
 		"action",
@@ -94,8 +139,27 @@ func main() {
 		":8008",
 		"Address for the web server to listen on (e.g., :8008)",
 	)
+	lockKey := flag.String(
+		"key",
+		"",
+		"Lock name for mode 'lock'",
+	)
+	lockTTL := flag.Int(
+		"ttl",
+		300,
+		"Lock expiry in seconds for mode 'lock'",
+	)
 
 	flag.Parse()
+
+	if strings.EqualFold(*mode, "lock") {
+		os.Exit(runLocked(
+			*configFile,
+			*lockKey,
+			time.Duration(*lockTTL)*time.Second,
+			flag.Args(),
+		))
+	}
 
 	service, err := sogo.NewSogoService(*configFile)
 	if err != nil {
@@ -109,6 +173,6 @@ func main() {
 	case "server":
 		runWebServer(service, *serverAddr)
 	default:
-		log.Fatalf("Invalid mode: %s. Use 'cli' or 'server'.", *mode)
+		log.Fatalf("Invalid mode: %s. Use 'cli', 'server', or 'lock'.", *mode)
 	}
 }
