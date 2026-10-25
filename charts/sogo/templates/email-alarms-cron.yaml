@@ -9,11 +9,12 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
+{{- $lock := include "sogo.cronLock" (dict "ctx" . "key" "ealarms" "ttl" 50) }}
 {{- if or .Values.sogo.emailAlarms.smtp.username .Values.sogo.emailAlarms.smtp.existingSecret }}
   cron: |
-    * * * * *  sogo  /usr/sbin/sogo-ealarms-notify -p /etc/sogo/smtp.creds
+    {{ printf "* * * * * sogo  %s/usr/sbin/sogo-ealarms-notify -p /etc/sogo/smtp.creds" $lock }}
 {{- else }}
   cron: |
-    * * * * *  sogo  /usr/sbin/sogo-ealarms-notify
+    {{ printf "* * * * * sogo  %s/usr/sbin/sogo-ealarms-notify" $lock }}
 {{- end }}
 {{- end }}

@@ -1,0 +1,31 @@
+{{- if and .Values.sogo.spool.enabled (not .Values.sogo.spool.persistence.existingClaim) }}
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ template "sogo.fullname" . }}-spool
+  labels:
+    app.kubernetes.io/name: {{ include "sogo.name" . }}
+    helm.sh/chart: {{ include "sogo.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/component: app
+  annotations:
+    helm.sh/resource-policy: keep
+  {{- with .Values.sogo.spool.persistence.annotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    - {{ .Values.sogo.spool.persistence.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.sogo.spool.persistence.size | quote }}
+  {{- with .Values.sogo.spool.persistence.storageClass }}
+  {{- if (eq "-" .) }}
+  storageClassName: ""
+  {{- else }}
+  storageClassName: "{{ . }}"
+  {{- end }}
+  {{- end }}
+{{- end }}

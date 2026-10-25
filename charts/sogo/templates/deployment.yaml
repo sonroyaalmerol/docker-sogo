@@ -154,6 +154,10 @@ spec:
               subPath: cron
               readOnly: true
             {{- end }}
+            {{- if .Values.sogo.spool.enabled }}
+            - name: sogo-spool
+              mountPath: {{ .Values.sogo.spool.path | quote }}
+            {{- end }}
             {{- if .Values.sogo.backup.enabled }}
             - name: sogo-backups
               mountPath: /home/sogo/backups
@@ -361,6 +365,11 @@ spec:
         - name: sogo-backups
           persistentVolumeClaim:
             claimName: {{ if .Values.sogo.backup.persistence.existingClaim }}{{ .Values.sogo.backup.persistence.existingClaim }}{{- else }}{{ template "sogo.fullname" . }}-backups{{- end }}
+        {{- end }}
+        {{- if .Values.sogo.spool.enabled }}
+        - name: sogo-spool
+          persistentVolumeClaim:
+            claimName: {{ if .Values.sogo.spool.persistence.existingClaim }}{{ .Values.sogo.spool.persistence.existingClaim }}{{- else }}{{ template "sogo.fullname" . }}-spool{{- end }}
         {{- end }}
         {{- if .Values.sogo.vacationExpiration.enabled }}
         - name: sogo-sieve-creds

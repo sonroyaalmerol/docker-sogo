@@ -1,1 +1,3 @@
 .pi/
+charts/*/charts/
+charts/*/Chart.lock

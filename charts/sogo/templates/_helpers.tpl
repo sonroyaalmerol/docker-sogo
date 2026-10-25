@@ -163,6 +163,29 @@ SOGoMemcachedHost: {{ template "sogo.memcached.fullname" . }}
 
 
 {{/*
+Resolve the memcached host SOGo will use, from the subchart or an explicit config.
+*/}}
+{{- define "sogo.memcached.host" -}}
+{{- if .Values.memcached.enabled -}}
+{{- include "sogo.memcached.fullname" . -}}
+{{- else -}}
+{{- (.Values.sogo.configs).SOGoMemcachedHost | default "" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Prefix a cron command with the singleton lock. Every replica mounts the same
+crontab, so without this each tick fires once per pod. Call with a dict of
+"ctx", "key" and "ttl".
+*/}}
+{{- define "sogo.cronLock" -}}
+{{- $ctx := .ctx -}}
+{{- if and $ctx.Values.sogo.cronSingleton.enabled (include "sogo.memcached.host" $ctx) -}}
+{{- printf "/usr/sbin/sogo-tool-plus -mode lock -key %s -ttl %d -- " .key (int .ttl) -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Create volume mounts for the sogo container.
 */}}
 {{- define "sogo.volumeMounts" -}}

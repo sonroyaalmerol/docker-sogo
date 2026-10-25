@@ -194,6 +194,42 @@ this OpenStep plist:
 
 If you want to use the usual OpenStep plist config instead, just mount your existing `sogo.conf` to `/etc/sogo/sogo.conf` and make sure to leave `/etc/sogo/sogo.conf.d/` empty.
 
+## Running multiple replicas
+
+SOGo keeps sessions, login caches and group lookups in memcached, so every replica must point at the same memcached server. The chart fails to render if you ask for more than one replica without one, rather than letting pods drift apart silently:
+
+```
+running more than one replica requires memcached: either set memcached.enabled=true,
+or point sogo.configs.SOGoMemcachedHost at an external server
+```
+
+### Scheduled jobs
+
+Every replica mounts the same crontab, so at `replicaCount: 3` each entry fires three times a minute: three copies of every calendar alarm mail, three concurrent `sogo-backup.sh` runs onto one PVC. Each cron line is therefore wrapped in a memcached lock:
+
+```
+* * * * * sogo /usr/sbin/sogo-tool-plus -mode lock -key ealarms -ttl 50 -- /usr/sbin/sogo-ealarms-notify
+```
+
+The first replica to `ADD` the key runs the job, the rest log a skip and exit 0. The lock is released as soon as the job finishes, and the TTL bounds it so a pod that is killed mid-run cannot wedge the schedule. Missing or unreachable memcached fails open and runs the job, so a cache outage never silently stops alarm mail on a single-replica install. Set `sogo.cronSingleton.enabled: false` to go back to unwrapped commands.
+
+### Drafts and attachments
+
+In-progress drafts and their uploaded attachments are written to local disk under `SOGoMailSpoolPath`, not to IMAP or the database. A compose started on one pod is therefore incomplete on another. Pick one of:
+
+- `service.sessionAffinity: ClientIP` to pin a client to one replica. Note this is applied by kube-proxy, so it does nothing when an ingress controller load-balances to pods itself; use that controller's sticky-session annotation instead.
+- `sogo.spool.enabled: true` with a `ReadWriteMany` volume, which shares the spool across pods and needs no affinity. The chart refuses `ReadWriteOnce` here when `replicaCount > 1`.
+
+```yaml
+sogo:
+  spool:
+    enabled: true
+    path: /var/spool/sogo
+    persistence:
+      accessMode: ReadWriteMany
+      size: 8Gi
+```
+
 ## Patches
 
 The following patches are applied to the SOGo source at build time. They are located in `patches/` and applied in sorted order. Prebuilt images carrying them are published under the `-patched` tags (see [Supported tags](#supported-tags)); unsuffixed tags are vanilla.

@@ -10,6 +10,6 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
   cron: |
-    {{ (printf "* * * * * sogo  /usr/sbin/sogo-tool expire-sessions %d" (.Values.sogo.sessionCleanup.maxInactivity | int)) }}
-    {{ (printf "* * * * * sogo  /usr/sbin/sogo-tool-plus -mode cli -action expire-sessions-creation -duration %d" (.Values.sogo.sessionCleanup.durationLimit | int)) }}
+    {{ (printf "* * * * * sogo  %s/usr/sbin/sogo-tool expire-sessions %d" (include "sogo.cronLock" (dict "ctx" . "key" "expire-sessions" "ttl" 50)) (.Values.sogo.sessionCleanup.maxInactivity | int)) }}
+    {{ (printf "* * * * * sogo  %s/usr/sbin/sogo-tool-plus -mode cli -action expire-sessions-creation -duration %d" (include "sogo.cronLock" (dict "ctx" . "key" "expire-sessions-creation" "ttl" 50)) (.Values.sogo.sessionCleanup.durationLimit | int)) }}
 {{- end }}

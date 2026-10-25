@@ -1,0 +1,16 @@
+{{- /*
+Sessions, login caches and the cron singleton lock all live in memcached. With
+more than one replica and no memcached, each pod keeps its own session cache and
+users get logged out whenever the load balancer moves them, with nothing logged.
+Fail the render instead of shipping a deployment that breaks under load.
+*/ -}}
+{{- $replicas := int .Values.replicaCount -}}
+{{- if .Values.hpa.enabled -}}
+{{- $replicas = max $replicas (int .Values.hpa.maxPods) -}}
+{{- end -}}
+{{- if and (gt $replicas 1) (not (include "sogo.memcached.host" .)) -}}
+{{- fail "running more than one replica requires memcached: either set memcached.enabled=true, or point sogo.configs.SOGoMemcachedHost at an external server" -}}
+{{- end -}}
+{{- if and .Values.sogo.spool.enabled (eq .Values.sogo.spool.persistence.accessMode "ReadWriteOnce") (gt $replicas 1) -}}
+{{- fail "sogo.spool with more than one replica needs sogo.spool.persistence.accessMode=ReadWriteMany" -}}
+{{- end -}}

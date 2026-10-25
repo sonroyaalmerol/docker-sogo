@@ -35,6 +35,9 @@ data:
 {{- if .Values.sogo.theme.js }}
     SOGoUIAdditionalJSFiles: [js/helm-theme.js]
 {{- end }}
+{{- if .Values.sogo.spool.enabled }}
+    SOGoMailSpoolPath: {{ .Values.sogo.spool.path }}
+{{- end }}
   init-theme-configs: |
     SOGoUIxDebugEnabled: true
 {{- if or .Values.mariadb.enabled .Values.postgresql.enabled }}

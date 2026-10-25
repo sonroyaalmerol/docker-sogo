@@ -118,7 +118,19 @@ sogo:
     # logo: <http url for logo file (.svg)>
     # favicon: <http url for favicon file (.ico)>
 
-  # Vacation messages expiration
+  cronSingleton:
+    enabled: true
+
+  spool:
+    enabled: false
+    path: /var/spool/sogo
+    persistence:
+      annotations: {}
+      existingClaim: ""
+      storageClass: ""
+      accessMode: ReadWriteMany
+      size: 8Gi
+
   vacationExpiration:
     enabled: false
     schedule: "*/5 * * * *"
@@ -242,6 +254,8 @@ service:
   port: 8080
   loadBalancerIP: ""
   nodePort: nil
+  sessionAffinity: None
+  sessionAffinityConfig: {}
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
