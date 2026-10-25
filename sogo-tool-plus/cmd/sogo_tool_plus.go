@@ -48,8 +48,7 @@ func runLocked(configFile, key string, ttl time.Duration, argv []string) int {
 	}()
 
 	if err := cmd.Run(); err != nil {
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
+		if exitErr, ok := errors.AsType[*exec.ExitError](err); ok {
 			return exitErr.ExitCode()
 		}
 		log.Printf("Failed to run %q: %v", argv[0], err)
@@ -66,15 +65,24 @@ func runWebServer(service *sogo.SogoService, addr string) {
 	mux.HandleFunc("/calendars/subscribe/user/", handler.HandleCalSubscribeUser)
 	mux.HandleFunc("/calendars/subscribe/all", handler.HandleCalSubscribeAll)
 
+	srv := &http.Server{
+		Addr:              addr,
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      15 * time.Minute,
+		IdleTimeout:       120 * time.Second,
+	}
+
 	log.Printf("Starting web server on %s", addr)
-	err := http.ListenAndServe(addr, mux)
+	err := srv.ListenAndServe()
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("Web server failed: %v", err)
 	}
 	log.Println("Web server stopped.")
 }
 
-func runCLI(service *sogo.SogoService, action, uid string, duration int) {
+func runCLI(service *sogo.SogoService, action, uid string, duration int, apply bool) {
 	log.Println("Running in CLI mode")
 	var err error
 
@@ -90,6 +98,21 @@ func runCLI(service *sogo.SogoService, action, uid string, duration int) {
 	case "cal-subscribe-all":
 		log.Println("Action: Subscribe All Users")
 		err = service.CalSubscribeAll()
+	case "cleanup-bogus-profiles":
+		log.Println("Action: Clean up bogus user profile rows")
+		if !apply {
+			log.Println("Dry run; pass -apply to delete. Nothing will be modified.")
+		}
+		var report *sogo.CleanupReport
+		report, err = service.CleanupBogusProfiles(apply)
+		if err == nil {
+			log.Printf(
+				"Found %d suspicious profile rows, deleted %d, skipped %d",
+				len(report.BogusProfiles),
+				report.DeletedProfiles,
+				len(report.SkipPrincipals),
+			)
+		}
 	case "expire-sessions-creation":
 		if duration == 0 {
 			log.Fatal(
@@ -104,7 +127,7 @@ func runCLI(service *sogo.SogoService, action, uid string, duration int) {
 		)
 	default:
 		log.Fatalf(
-			"Invalid action: %s. Use 'cal-subscribe-user', 'cal-subscribe-all', or 'expire-sessions-creation'.",
+			"Invalid action: %s. Use 'cal-subscribe-user', 'cal-subscribe-all', 'expire-sessions-creation', or 'cleanup-bogus-profiles'.",
 			action,
 		)
 	}
@@ -125,7 +148,7 @@ func main() {
 	action := flag.String(
 		"action",
 		"",
-		"CLI action: 'cal-subscribe-user', 'cal-subscribe-all', or 'expire-sessions-creation'",
+		"CLI action: 'cal-subscribe-user', 'cal-subscribe-all', 'expire-sessions-creation', or 'cleanup-bogus-profiles'",
 	)
 	uid := flag.String("uid", "", "User ID for 'cal-subscribe-user' action")
 	sessionDuration := flag.Int("duration", 0, "Max duration for sessions since creation date in minutes (must be greater than zero)")
@@ -149,6 +172,11 @@ func main() {
 		300,
 		"Lock expiry in seconds for mode 'lock'",
 	)
+	apply := flag.Bool(
+		"apply",
+		false,
+		"Actually perform deletions for destructive actions; otherwise dry run",
+	)
 
 	flag.Parse()
 
@@ -169,7 +197,7 @@ func main() {
 
 	switch strings.ToLower(*mode) {
 	case "cli":
-		runCLI(service, *action, *uid, *sessionDuration)
+		runCLI(service, *action, *uid, *sessionDuration, *apply)
 	case "server":
 		runWebServer(service, *serverAddr)
 	default:
